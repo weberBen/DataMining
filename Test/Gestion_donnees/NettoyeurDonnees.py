@@ -6,7 +6,7 @@ import ast
 import logging
 import os
 import json
-import unwiki
+import modules.unwiki as unwiki
 
 #%%__init__
 
@@ -167,6 +167,9 @@ def nettoyerResumes(fichier_resumes, table_films, dossier_de_sortie):
             
             cpt+=1
             
+            if cpt==50:
+                break
+            
 #%%
 
 def nettoyer(fichier_table_film, fichier_resume, dossier_sortie):
@@ -185,5 +188,3 @@ def nettoyer(fichier_table_film, fichier_resume, dossier_sortie):
 
 #%%
 
-            
-            
