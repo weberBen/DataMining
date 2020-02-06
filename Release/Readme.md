@@ -1,1 +1,1 @@
-Stable version of the projet
+Version stable du projet
