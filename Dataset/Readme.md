@@ -1,7 +1,7 @@
 Lien du coprus de résumés de film : http://www.cs.cmu.edu/~ark/personas/
 Les fichiers ont été séparés en plusieurs parties pour faciliter la mise en ligne
 
-Pour notre projet nous utilisons une base de données allégées et nettoyées où chaque information du film : <wikiId> (identifiant wikipédia utilisé dans la base de données originelle), <<\titre\>> (titre du film), <dateSortie> (la date de sortie du film au format année-mois-jour), <duree> (durée du film en minute), <genre> (liste des genres du films) et le résume <resume> (au format texte du film dans lesquels les marqueurs wikipédia ont été supprimé) sont dans le même fichier json.
+Pour notre projet nous utilisons une base de données allégées et nettoyées où chaque information du film : <wikiId> (identifiant wikipédia utilisé dans la base de données originelle), < titre > (titre du film), <dateSortie> (la date de sortie du film au format année-mois-jour), <duree> (durée du film en minute), <genre> (liste des genres du films) et le résume <resume> (au format texte du film dans lesquels les marqueurs wikipédia ont été supprimé) sont dans le même fichier json.
 (Format : {<wikiId> : ***, <titre> : ***, <dateSortie> : ***, <duree> : ***, <genre> : ***, <resume> : ***})
 
 Les identifiants wikipédia suivants n'ont pas de correspondance entre les résumés de film et la table des films proposée dans la base de données originelle :
