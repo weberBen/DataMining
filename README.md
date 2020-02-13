@@ -4,15 +4,22 @@
 
 The following modules need to be installed first :
 
-'''python
-anytree'''
+```python
+anytree
+```
 
-** nltk **
+```python 
+nltk
+```
 
 Then in a pyhton consol run the commands :
- *  nltk.download() (dans le terminal python)
- *  nltk.download('stopwords') (dans le terminal python)
- *  nltk.download('punkt') (dans le terminal python)
+ ```python
+ nltk.download()
+ nltk.download('stopwords')
+ nltk.download('punkt')
+```
 
-**num2words**
+```python
+num2words
+```
 
