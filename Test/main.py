@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
+import environment as Env
 from environment import EnvVar
 import os
+import sys
+from pathlib import Path
+
+def setUpEnvPath():
+    current_path = Path(sys.argv[0]).parent
+    dataset_path = os.path.join(current_path,  Env.DATASET_FOLDER_NAME)
+    
+    while ((not os.path.exists(dataset_path)) or (not os.path.isdir(dataset_path))) and len(dataset_path)!=0:
+        current_path = Path(current_path).parent
+        dataset_path = os.path.join(current_path,  Env.DATASET_FOLDER_NAME)
+    
+    
+    return EnvVar(dataset_path)
 
 
-dataset_folder_path = '/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Dataset'
-Env = EnvVar(dataset_folder_path)
-database = Env.Database
-wordsBag = Env.WordsBag
+env = setUpEnvPath()
+database = env.Database
+wordsBag = env.WordsBag
 
 
 '''
 itération sur tous les (fichiers des) films
 --> Youssef utilise ca pour parcourir les films à la place d'utiliser les fichiers directement
 '''
-
+print("enter2")
 it = database.iterator()
 cpt = 0
 while it.hasNext():
@@ -53,7 +65,6 @@ word4 = "geronima"
 
 
 print("1:", (wordsBag.getId(word1) is not None))
-print("2:", (wordsBag.getId(word2) is not None))
 print("3:", (wordsBag.getId(word3) is not None))
 print("4:", (wordsBag.getId(word4) is not None))
 

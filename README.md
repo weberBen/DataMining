@@ -3,10 +3,8 @@
 modules :
 - anytree
 - nltk
--  nltk.download()
--  nltk.download('stopwords')
--  nltk.download('punkt')
+ -  nltk.download() (dans le terminal python)
+ -  nltk.download('stopwords') (dans le terminal python)
+ -  nltk.download('punkt') (dans le terminal python)
 - num2words
 
-Instructions :
-- dezipper l'archive CleanMovieData.zip dans le dossier Dataset
