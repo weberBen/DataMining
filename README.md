@@ -4,13 +4,9 @@
 
 The following modules need to be installed first :
 
-```python
-anytree
-```
-
-```python 
-nltk
-```
+* anytree
+* nltk
+* num2words
 
 Then in a pyhton consol run the commands :
  ```python
@@ -18,8 +14,3 @@ Then in a pyhton consol run the commands :
  nltk.download('stopwords')
  nltk.download('punkt')
 ```
-
-```python
-num2words
-```
-
