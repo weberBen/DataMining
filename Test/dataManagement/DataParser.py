@@ -4,6 +4,8 @@ import os
 import logging
 import json
 import os
+import zipfile
+from pathlib import Path
 
 #%%
 
@@ -35,7 +37,7 @@ class MovieData:
         return '<Film : wikiId= {0}, nom={1}, date_sortie={2}, genre={3}, resume={4}>'.format(self.wikiId, self.titre, self.dateSortie, self.genre, self.resume)
   
 class Database:
-    def __init__(self, folder_movies_data):
+    def __init__(self, zip_filename_movie_data):
         '''
         Création d'un object base de données
         
@@ -43,11 +45,17 @@ class Database:
             dossier_fiches_films (string) : chemin du dossier contenant les fiches des films au format json ({<wikiId> : ***, <titre> : ***, <dateSortie> : ***, <duree> : ***, <genre> : ***, <resume> : ***})
                 Les résumés sont supposés nettoyés
         '''
-        self.folderData = folder_movies_data
-        self.index = 0
+        logging.info("starting database")
+        self._zippedFolder = zipfile.ZipFile(zip_filename_movie_data, 'r')
+        self._folderDataName = Path(self._zippedFolder.filename).stem
+        self._index = 0
+        logging.info("database started")
     
-    def __getDataFilename__(self, index):
-        return os.path.join(self.folderData, "{0}.json".format(index))
+    def _getDataFilename(self, index):
+        return os.path.join(self._folderDataName, "{0}.json".format(index))
+    
+    def _fileExists(self, filename):
+        return (filename in self._zippedFolder.namelist())
     
     def getMovie(self, index):
         '''
@@ -61,14 +69,16 @@ class Database:
             return None
         
         movie_data = None
-        filename = self.__getDataFilename__(index)
-        if not os.path.exists(filename) :
+        filename = self._getDataFilename(index)
+        if not self._fileExists(filename):
             return None
         
-        with open(filename, 'r') as json_file:
-            data = json.load(json_file)
-            wiki_id, title, release_date, length, genre, summary = data["wikiId"], data["titre"], data["dateSortie"], data["duree"], data["genre"], data["resume"]
-            movie_data = MovieData(wiki_id, title, release_date, length, genre, summary)
+        b_json_file = self._zippedFolder.read(filename)
+        json_file = b_json_file.decode('utf8')
+        
+        data = json.loads(json_file)
+        wiki_id, title, release_date, length, genre, summary = data["wikiId"], data["titre"], data["dateSortie"], data["duree"], data["genre"], data["resume"]
+        movie_data = MovieData(wiki_id, title, release_date, length, genre, summary)
         
         return movie_data
     
@@ -77,15 +87,15 @@ class Database:
     #-------------------------------------------
     
     def iterator(self):
-        return self.__Iterator__(self)
+        return self._Iterator(self)
     
-    class __Iterator__():
+    class _Iterator():
         def __init__(self, database):
             self._database = database
             self._index = 0
         
         def hasNext(self):
-            return os.path.exists(self._database.__getDataFilename__(self._index))
+            return self._database._fileExists(self._database._getDataFilename(self._index))
         
         def getNext(self):
             data = self._database.getMovie(self._index)

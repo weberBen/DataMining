@@ -27,18 +27,18 @@ nltk.download('punkt')
 class AlphabeticTree:
     def __init__(self, tree_filename=None):
         
-        res = self.__loadTree__(tree_filename)
+        res = self._loadTree(tree_filename)
         if res is None:
-            self.index = 0
-            self.tree = self.__createEmptytree__()
+            self._index = 0
+            self._tree = self._createEmptytree()
         else :
-            self.index, self.tree = res[0], res[1]
+            self._index, self._tree = res[0], res[1]
         
     
     #-------------------------------------------------------
     #
     #-------------------------------------------------------
-    def __loadTree__(self, filename):
+    def _loadTree(self, filename):
         str_tree = None
         index = 0
         
@@ -61,35 +61,33 @@ class AlphabeticTree:
         return index, tree
     
         
-    def __createNode__(self, parent, letter):
+    def _createNode(self, parent, letter):
         return AnyNode(id=None, label=letter, end=False, parent=parent)
     
-    def __createEmptytree__(self):
-        root = AnyNode(id="root")
-        #self.__initializeNode__(root)
-       
+    def _createEmptytree(self):
+        root = AnyNode(id="root")      
         return root
         
     def toFile(self, filename):
         exporter = JsonExporter(indent=0, sort_keys=False)
         with open(filename, 'w') as file:
-            file.write(str(self.index))
+            file.write(str(self._index))
             file.write("\n")
-            file.write(exporter.export(self.tree))
+            file.write(exporter.export(self._tree))
     
     def toString(self):
-        return RenderTree(self.tree)
+        return RenderTree(self._tree)
     
-    def __getNodeId__(self):
-        val = self.index
-        self.index+=1
+    def _getNodeId(self):
+        val = self._index
+        self._index+=1
         
         return val
         
     #-------------------------------------------------------
     #
     #-------------------------------------------------------
-    def __getNode__(self, node, letter):
+    def _getNode(self, node, letter):
         for elm in node.children:
             if elm.label == letter:
                 return elm
@@ -100,27 +98,26 @@ class AlphabeticTree:
         if word_str is None:
             return None
         
-        node = self.tree
+        node = self._tree
         for letter in word_str:
             
-            child = self.__getNode__(node, letter)
+            child = self._getNode(node, letter)
             if child is None:
-                child = self.__createNode__(node, letter)
+                child = self._createNode(node, letter)
             node = child
         
-        if node == self.tree:
+        if node == self._tree:
             return None
         
         if not node.end :
             node.end = True
-            node.id = self.__getNodeId__()
+            node.id = self._getNodeId()
         
     def getId(self, word_str):
-        node = self.tree
-        print("-----------------------------------")
-        print("word=", word_str)
+        node = self._tree
+        
         for letter in word_str:
-            child = self.__getNode__(node, letter)
+            child = self._getNode(node, letter)
             if child is None:
                 return None
             node = child
@@ -130,29 +127,29 @@ class AlphabeticTree:
         else:
             return None
     
-    def __getWordPath__(self, leaf_node):
+    def _getWordPath(self, leaf_node):
         word = ""
         node = leaf_node
         
-        while node!=self.tree:
+        while node!=self._tree:
             word = node.label + word
             node = node.parent
         
         return word
     
     def size(self):
-        return self.index
+        return self._index
     #%%
     
     def iterator(self):
-        return self.__Iterator__(self)
+        return self._Iterator(self)
     
-    class __Iterator__():
+    class _Iterator():
         def __init__(self, Tree):
             self._obj = Tree
-            self._iterator = PreOrderIter(self._obj.tree, filter_=lambda node: node.is_leaf)
+            self._iterator = PreOrderIter(self._obj._tree, filter_=lambda node: node.is_leaf)
             
-            self._next_word = self.__getNext__()
+            self._next_word = self._getNext()
             if self._next_word is None:
                 self._hasNext = False
             else:
@@ -161,11 +158,11 @@ class AlphabeticTree:
         def hasNext(self):
             return self._hasNext
         
-        def __getNext__(self):
+        def _getNext(self):
             
             try:
                 node = next(self._iterator)
-                return self._obj.__getWordPath__(node)
+                return self._obj._getWordPath(node)
                 
             except StopIteration:
                 self._hasNext = False
@@ -175,7 +172,7 @@ class AlphabeticTree:
         def getNext(self):
             
             tmp = self._next_word
-            self._next_word = self.__getNext__()
+            self._next_word = self._getNext()
             return tmp
             
 #%%
@@ -185,7 +182,7 @@ class Language:
         self._stemmer = SnowballStemmer("english")
         self._stop_words = set(stopwords.words('english')) 
         
-    def __removeAccent__(self, text):
+    def _removeAccent(self, text):
         #https://stackoverflow.com/questions/44431730/how-to-replace-accented-characters-in-python?rq=1
         try:
             text = unicode(text, 'utf-8')
@@ -198,7 +195,7 @@ class Language:
     
         return str(text)
     
-    def __numberToTextFunction__(self, num):
+    def _numberToTextFunction(self, num):
         try :
             num = int(num)
         except ValueError :
@@ -221,11 +218,11 @@ class Language:
         if word in self._stop_words:
             return None
         
-        tmp = self.__numberToTextFunction__(word)
+        tmp = self._numberToTextFunction(word)
         if tmp is not None:
             word = tmp
         
-        tmp = self.__removeAccent__(word)
+        tmp = self._removeAccent(word)
         if word is not None:
             word = tmp
         
@@ -242,7 +239,7 @@ class WordsBag:
         logging.info("dictionnary loaded")
         self._Language = Language()
     
-    def __addWord__(self, word_str):
+    def _addWord(self, word_str):
         word = self._Language.normalize(word_str)
         if word is not None:
             self._dico.addWord(word)
@@ -250,7 +247,7 @@ class WordsBag:
     def populateFromTxt(self, text):
         token_txt = word_tokenize(text)
         for word in token_txt:
-            self.__addWord__(word)
+            self._addWord(word)
     
     def update(self):
         self._dico.toFile(self._filename)
