@@ -6,18 +6,12 @@ import logging
 from anytree import AnyNode, RenderTree, PreOrderIter
 from anytree.exporter import JsonExporter
 from anytree.importer import JsonImporter
-import string
 import json
 import os
 import sys
-from nltk.tokenize import word_tokenize
-from nltk.stem.snowball import SnowballStemmer
-import unicodedata
-from num2words import num2words
-from nltk.corpus import stopwords
-import re
-from nltk.tokenize import TweetTokenizer
 import datetime
+
+from dataManagement.Language import Language
 
 '''
 import nltk
@@ -25,6 +19,7 @@ nltk.download()
 nltk.download('stopwords')
 nltk.download('punkt')
 '''
+
 
 #%%
 class AlphabeticTree:
@@ -127,7 +122,10 @@ class AlphabeticTree:
         if not node.end :
             node.end = True
             node.id = self._getNodeId()
-        
+    
+    def isIn(self, word):
+        return self.getId(word) is not None
+    
     def getId(self, word_str):
         node = self._tree
         
@@ -193,65 +191,11 @@ class AlphabeticTree:
             self._next_word = self._getNext()
             return tmp
             
-#%%
-#SnowballStemmer(language)
-class Language:
-    def __init__(self):
-        self._stemmer = SnowballStemmer("english")
-        self._stop_words = set(stopwords.words('english'))
-        self.sentenceSeparator = "."
-        
-    def _removeAccent(self, text):
-        #https://stackoverflow.com/questions/44431730/how-to-replace-accented-characters-in-python?rq=1
-        try:
-            text = unicode(text, 'utf-8')
-        except NameError: # unicode is a default on python 3 
-            pass
-    
-            text = unicodedata.normalize('NFD', text)\
-               .encode('ascii', 'ignore')\
-               .decode("utf-8")
-    
-        return str(text)
-    
-    def _numberToTextFunction(self, num):
-        try :
-            num = int(num)
-        except ValueError :
-            return None
-        
-        return num2words(num, lang='en')
-    
-    def normalize(self, word):
-        word = word.lower()
-        
-        regex = re.compile('[%s]' % re.escape(string.punctuation))
-        word = regex.sub(' ', word)
-        #word = word.translate(str.maketrans('', '', string.punctuation))
-        word = word.strip()
-        
-        
-        if len(word)==0:
-            return None
-        
-        if word in self._stop_words:
-            return None
-        
-        tmp = self._numberToTextFunction(word)
-        if tmp is not None:
-            word = tmp
-        
-        tmp = self._removeAccent(word)
-        if word is not None:
-            word = tmp
-        
-        word = self._stemmer.stem(word)
-        
-        return word
+
 #%%
 
 class WordsBag:
-    def __init__(self, filename, erease=False):
+    def __init__(self, filename, erease=False, Language=Language()):
         if filename is  None :
             logging.warning("Fichier de sauvegarde du dictionnaire invalide")
             sys.exit()
@@ -260,19 +204,13 @@ class WordsBag:
         logging.info("loading dictionnary")
         self._dico = AlphabeticTree(filename, erease)
         logging.info("dictionnary loaded")
-        self._Language = Language()
-        self._tokenize = TweetTokenizer()
-    
-    def _addWord(self, word_str):
-        word = self._Language.normalize(word_str)
-        if word is not None:
-            self._dico.addWord(word)
+        self._Language = Language
     
     def populateFromTxt(self, txt):
-        txt = txt.replace(self._Language.sentenceSeparator, " ")
-        token_txt = self._tokenize.tokenize(txt)
-        for word in token_txt:
-            self._addWord(word)
+        clean_txt = self._Language.broom(txt)
+
+        for word in clean_txt:
+            self._dico.addWord(word)
     
     def update(self):
         self._dico.toFile(self._filename)
@@ -306,7 +244,17 @@ class WordsBag:
             cpt+=1
         
         logging.info("dictionnary has been initialized from database")
+    
+    def getIds(self, txt):
+        clean_txt = self._Language.broom(txt)
+        output = []
         
+        for word in clean_txt:
+            id_word = self.getId(word)
+            if id_word is not None:
+                output.append((word, id_word))
+        
+        return output
     
 #%%
 
