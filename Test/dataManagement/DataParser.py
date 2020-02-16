@@ -3,7 +3,7 @@
 import os
 import logging
 import json
-import os
+import sys
 import zipfile
 from pathlib import Path
 
@@ -46,6 +46,11 @@ class Database:
                 Les résumés sont supposés nettoyés
         '''
         logging.info("starting database")
+        
+        if not os.path.exists(zip_filename_movie_data) or not os.path.isfile(zip_filename_movie_data):
+            logging.warning("archive de la base de données introuvabale")
+            sys.exit()
+        
         self._zippedFolder = zipfile.ZipFile(zip_filename_movie_data, 'r')
         self._folderDataName = Path(self._zippedFolder.filename).stem
         self._index = 0

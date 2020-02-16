@@ -9,12 +9,15 @@ from anytree.importer import JsonImporter
 import string
 import json
 import os
+import sys
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 import unicodedata
 from num2words import num2words
 from nltk.corpus import stopwords
 import re
+from nltk.tokenize import TweetTokenizer
+import datetime
 
 '''
 import nltk
@@ -25,25 +28,31 @@ nltk.download('punkt')
 
 #%%
 class AlphabeticTree:
-    def __init__(self, tree_filename=None):
+    def __init__(self, tree_filename=None, erease=False):
         
-        res = self._loadTree(tree_filename)
+        res = self._loadTree(tree_filename, erease)
         if res is None:
+            logging.info("new alphabetical tree has been created")
             self._index = 0
             self._tree = self._createEmptytree()
         else :
+            logging.info("alphabetical tree has been loaded from file")
             self._index, self._tree = res[0], res[1]
         
     
     #-------------------------------------------------------
     #
     #-------------------------------------------------------
-    def _loadTree(self, filename):
+    def _loadTree(self, filename, erease):
         str_tree = None
         index = 0
         
-        if not os.path.exists(filename):
+        if filename is None or not os.path.exists(filename):
             return None
+        
+        if erease:
+            with open(filename, 'w') as file:
+                file.write("")
         
         with open(filename, 'r') as file:
             try :
@@ -93,7 +102,13 @@ class AlphabeticTree:
                 return elm
         
         return None
-            
+    
+    def _isEmpty(self):
+        return len(self._tree.children)==0
+    
+    def _isRootNode(self, node):
+        return node==self._tree
+    
     def addWord(self, word_str):
         if word_str is None:
             return None
@@ -149,11 +164,14 @@ class AlphabeticTree:
             self._obj = Tree
             self._iterator = PreOrderIter(self._obj._tree, filter_=lambda node: node.is_leaf)
             
-            self._next_word = self._getNext()
-            if self._next_word is None:
+            if self._obj._isEmpty():
                 self._hasNext = False
-            else:
-                self._hasNext = True
+            else :
+                self._next_word = self._getNext()
+                if self._next_word is None:
+                    self._hasNext = False
+                else:
+                    self._hasNext = True
         
         def hasNext(self):
             return self._hasNext
@@ -180,7 +198,8 @@ class AlphabeticTree:
 class Language:
     def __init__(self):
         self._stemmer = SnowballStemmer("english")
-        self._stop_words = set(stopwords.words('english')) 
+        self._stop_words = set(stopwords.words('english'))
+        self.sentenceSeparator = "."
         
     def _removeAccent(self, text):
         #https://stackoverflow.com/questions/44431730/how-to-replace-accented-characters-in-python?rq=1
@@ -232,20 +251,26 @@ class Language:
 #%%
 
 class WordsBag:
-    def __init__(self, filename):
+    def __init__(self, filename, erease=False):
+        if filename is  None :
+            logging.warning("Fichier de sauvegarde du dictionnaire invalide")
+            sys.exit()
+        
         self._filename = filename
         logging.info("loading dictionnary")
-        self._dico = AlphabeticTree(filename)
+        self._dico = AlphabeticTree(filename, erease)
         logging.info("dictionnary loaded")
         self._Language = Language()
+        self._tokenize = TweetTokenizer()
     
     def _addWord(self, word_str):
         word = self._Language.normalize(word_str)
         if word is not None:
             self._dico.addWord(word)
     
-    def populateFromTxt(self, text):
-        token_txt = word_tokenize(text)
+    def populateFromTxt(self, txt):
+        txt = txt.replace(self._Language.sentenceSeparator, " ")
+        token_txt = self._tokenize.tokenize(txt)
         for word in token_txt:
             self._addWord(word)
     
@@ -265,17 +290,26 @@ class WordsBag:
     def size(self):
         return self._dico.size()
     
-    def initialize(self, database_obj):
+    def initialize(self, database_obj, count_item=100):
+        logging.info("initialize dictionnary from database...")
         it = database_obj.iterator()
+        
+        cpt=1
         
         while it.hasNext():
             movie = it.getNext()
-            print(movie.title)
             self.populateFromTxt(movie.summary)
+            
+            if cpt%count_item==0:
+                logging.info("{0} items has been browse since the begining ({1})".format(cpt, datetime.datetime.now()))
+                
+            cpt+=1
         
+        logging.info("dictionnary has been initialized from database")
         
     
 #%%
+
 
 '''
 import DataParser
