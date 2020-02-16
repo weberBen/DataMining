@@ -67,8 +67,8 @@ class EnvVar:
         return WordsBag(path, erease)
 
 #%%
-def getPathFolder(current_path, folder_to_reach):
-    current_path = Path(sys.argv[0]).parent
+def getPathFolder(actual_path, folder_to_reach):
+    current_path = Path(actual_path).parent
     output = os.path.join(current_path,  folder_to_reach)
     
     while ((not os.path.exists(output)) or (not os.path.isdir(output))) and len(output)!=0:
