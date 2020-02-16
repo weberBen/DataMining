@@ -20,14 +20,21 @@ sys.path.insert(0, '..')
 
 freqFormat = "/*_freq.txt"
 
+###############################################
+#--------------------CLASS--------------------#
+###############################################
 
-class TDM_VM:
+class TDMvm:
     def __init__(self, path):
         self.mat, self.idf = createTFMatrixV2(path)
 
     def toStr(self):
         print("Matrice Termes-Documents (TF) :\n",self.mat.toarray())
         print("Vecteur IDF :\n",self.idf.toarray())
+
+###################################################
+#--------------------FUNCTIONS--------------------#
+###################################################
 
 def addDocumentToMatrix(M, V, mat):
     pass
@@ -127,17 +134,50 @@ def cosNorm(Q, C):
     """
     return Q.multiply(C).sum()/(np.sqrt(Q.multiply(Q).sum())*np.sqrt(C.multiply(C).sum()))
 
-def getSimilarityCos(M, V, Q):
+def getMostRelevantDoc(tdm, Q, mute = True):
     """
-    CSC * CSC * CSC -> array[float]
+    TDMvm * CSC -> int * float
     """
-    return None
+    M, V = tdm.mat, tdm.idf
+    ql = Q.shape[0]
+    m, n = M.shape
+    #topscl = array.array('f')
+    maxsco = 0.0
+    imax = 0
+    i = 0
+    start = perf_counter()
+    if ql < m:
+        Q.resize(V.shape)
+        while i < n:
+            scoi = cosNorm(Q, M[i])
+            if maxsco < scoi:
+                maxsco = scoi
+                imax = i
+            #topscl.append(cosNorm(Q, M[i]))
+            i += 1
+    else:
+        qs = Q.shape
+        while i < n:
+            tmp = M[i].copy()
+            scoi = cosNorm(Q, tmp.resize(qs))
+            if maxsco < scoi:
+                maxsco = scoi
+                imax = i
+            i += 1
+    end = perf_counter()
+    if not mute:
+        print("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
+    return imax, maxsco
 
 def testW():
     A  = np.array([1, 2, 3, 9, 1, 4])
     indptr = np.array([0, 2, 4, 4, 6])
     indices = np.array([0, 1, 1, 6, 2, 7])
     print(scs.csr_matrix((A, indices, indptr), dtype = float).toarray())
+
+##############################################
+#--------------------MAIN--------------------#
+##############################################
 
 def main(args = None):
     def usage():
@@ -164,7 +204,7 @@ if __name__ == '__main__':
 #--------------------DEPRECATED--------------------#
 ####################################################
 
-def createTFMatrixV1(path = "."):
+def DEPRECATEDcreateTFMatrixV1(path = "."):
     """
     DEPRECATED
     string -> CSR | None
@@ -172,6 +212,8 @@ def createTFMatrixV1(path = "."):
     les coefficients sont les fréquences de chaque mot
     dans les documents
     """
+    print("Fonction obsolète, veuillez utiliser createMatrixV2")
+    exit()
     lst_dwc = glob.glob(path+freqFormat)
     data = []
     indices = []
@@ -210,13 +252,15 @@ def createTFMatrixV1(path = "."):
     print("createTFMatrixV1 - Taille CSR : "+str(sys.getsizeof(M))+" bytes")
     return M
 
-def convertToTFIDF(M):
+def DEPRECATEDconvertToTFIDF(M):
     """
     DEPRECATED
     ndarray -> ndarray
     Convertit la matrice termes-documents TF en matrice
     TF-IDF
     """
+    print("Fonction obsolète, veuillez utiliser createMatrixV2")
+    exit()
     m, n = M.shape
     for i in range(m):
         ni = max(np.sum(M[i]>0),0.001)
