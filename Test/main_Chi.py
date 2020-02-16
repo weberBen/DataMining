@@ -14,7 +14,7 @@ wordsBagInfo = Env.WordsBagInfo(ignore=True)
 info = Env.Info(wordsBagInfo=wordsBagInfo)
 '''
 
-env_obj = Env.setupEnv(sys.argv[0], info)
+env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag
 
