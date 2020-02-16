@@ -76,14 +76,27 @@ def getPathFolder(actual_path, folder_to_reach):
         current_path = path.parent
         
         if path == current_path:
-            logging.warning("Cannot find the desired path")
-            sys.exit()
+            return None
         
         output = os.path.join(current_path,  folder_to_reach)
+        print(output)
+    
     
     
     return output
 
 def setupEnv(scirpt_path_execution, info = Info()):
-    dataset_path = getPathFolder(scirpt_path_execution, _DATASET_FOLDER_NAME)
+    
+    if type(scirpt_path_execution)==str:
+        dataset_path = getPathFolder(scirpt_path_execution, _DATASET_FOLDER_NAME)
+    else:
+        for path in scirpt_path_execution :
+            dataset_path = getPathFolder(path, _DATASET_FOLDER_NAME)
+            if dataset_path is not None:
+                break
+    
+    if dataset_path is None:
+        logging.warning("Cannot find the desired path")
+        sys.exit()
+    
     return EnvVar(dataset_path, info)

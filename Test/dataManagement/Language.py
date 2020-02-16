@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import string
-from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 import unicodedata
 from num2words import num2words
