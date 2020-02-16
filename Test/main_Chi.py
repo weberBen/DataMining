@@ -6,7 +6,6 @@
 import environment as Env
 import sys
 from querySystem.matrixOp import *
-from dataManagement.Dictionnary import WordsBag
 
 info = Env.Info()
 '''
