@@ -7,34 +7,16 @@ import os
 import sys
 from pathlib import Path
 
-def getEnvPath():
-    current_path = Path(sys.argv[0]).parent
-    dataset_path = os.path.join(current_path,  Env.DATASET_FOLDER_NAME)
-    
-    while ((not os.path.exists(dataset_path)) or (not os.path.isdir(dataset_path))) and len(dataset_path)!=0:
-        current_path = Path(current_path).parent
-        dataset_path = os.path.join(current_path,  Env.DATASET_FOLDER_NAME)
-    
-    
-    return dataset_path
 
+root_path = Env.DATASET_PATH
 
-root_path = getEnvPath()
-
-#wordsBagInfo = Env.WordsBagInfo(os.path.join(root_path, "dictionnary.json"), True)
+#wordsBagInfo = Env.WordsBagInfo(os.path.join(root_path, "dictionnary.json"), True, ignore=False)
 wordsBagInfo = None
 
 env = EnvVar(root_path, wordsBagInfo=wordsBagInfo)
 database = env.Database
 wordsBag = env.WordsBag
-'''
-wordsBag.initialize(database, 1000)
-wordsBag.update()'''
 
-'''
-itération sur tous les (fichiers des) films
---> Youssef utilise ca pour parcourir les films à la place d'utiliser les fichiers directement
-'''
 
 print("\n------------Movies title------------")
 it = database.iterator()
