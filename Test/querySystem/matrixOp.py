@@ -8,13 +8,15 @@
 # addDocument
 
 import sys
+import os
 import numpy as np
 import scipy.sparse as scs
 import array 
 import glob
-import os
-from math import log
+from pathlib import Path
 from time import perf_counter
+
+sys.path.insert(0, '..')
 
 freqFormat = "/*_freq.txt"
 
@@ -96,7 +98,7 @@ def createTFMatrixV2(path = ".", mute = True):
     i = 0
     V = array.array('f')
     while i < m:
-        V.append(log(n/max(0.001, M.getrow(i).count_nonzero())))
+        V.append(np.log(n/max(0.001, M.getrow(i).count_nonzero())))
         i += 1
     V = scs.csc_matrix((V, range(len(V)), [0, len(V)]), dtype = float)
     end = perf_counter()
@@ -105,12 +107,12 @@ def createTFMatrixV2(path = ".", mute = True):
         print("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
     return M, V
 
-def createQueryVect(string, mute = True):
+def createQueryVect(wordsbag, sentence, mute = True):
     """
     string * bool -> CSC | None
     """
     start = perf_counter()
-    indices = [k[-1] for k in wordsBag.getIds(string)]
+    indices = [k[-1] for k in wordsbag.getIds(sentence)]
     data = [1]*len(indices)
     indptr = [0, len(indices)]
     Q = scs.csc_matrix((data, indices, indptr), dtype = int)
@@ -127,16 +129,17 @@ def cosNorm(Q, C):
 
 def getSimilarityCos(M, V, Q):
     """
-    CSC * CSC * CSC -> list[float]
+    CSC * CSC * CSC -> array[float]
     """
+    return None
 
-def test():
+def testW():
     A  = np.array([1, 2, 3, 9, 1, 4])
     indptr = np.array([0, 2, 4, 4, 6])
     indices = np.array([0, 1, 1, 6, 2, 7])
     print(scs.csr_matrix((A, indices, indptr), dtype = float).toarray())
 
-def main(args):
+def main(args = None):
     def usage():
         # Self-explanatory
         instr = """Usage : python3 matrixOperations.py"""
@@ -144,16 +147,18 @@ def main(args):
     # Pour avoir une matrice plus lisible, ajouter .toarray() pour convertir
     # la matrice CSR en matrice normale
     #print(createTFMatrixV1().toarray())
-    print("")
+    #print("")
+    print("Création de la matrice termes-documents")
     A, V = createTFMatrixV2(mute = False)
     print(A.toarray())
     print(V.toarray())
-    print(A.nonzero())
-    #test()
+    #print(A.nonzero())
+    s = input("Recherche : ")
+    Q = createQueryVect(s, mute = False)
+    print(Q.toarray())
 
 if __name__ == '__main__':
-    args = sys.argv
-    main(args)
+    main()
 
 ####################################################
 #--------------------DEPRECATED--------------------#
@@ -215,5 +220,5 @@ def convertToTFIDF(M):
     m, n = M.shape
     for i in range(m):
         ni = max(np.sum(M[i]>0),0.001)
-        M[i] = M[i]*log(n/ni)
+        M[i] = M[i]*np.log(n/ni)
     return M
