@@ -68,12 +68,12 @@ class EnvVar:
 
 #%%
 def getPathFolder(actual_path, folder_to_reach):
-    current_path = Path(actual_path).parent
+    current_path = str(Path(actual_path).parent)
     output = os.path.join(current_path,  folder_to_reach)
     
     while ((not os.path.exists(output)) or (not os.path.isdir(output))) and len(output)!=0:
-        path = Path(current_path)
-        current_path = path.parent
+        path = str(Path(current_path))
+        current_path = str(path.parent)
         
         if path == current_path:
             return None
