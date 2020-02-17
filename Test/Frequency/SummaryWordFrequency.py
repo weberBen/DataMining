@@ -36,41 +36,37 @@ class Frequency:
         self._filename = "MoviesFrequence.txt"
     
     def _word_frequency(self, movie):
-        ''' pour chaque résume cree un fichier qui donne le nombre d'occurence
-        des mots (en faisant référence à l'identifiant du fichier précédent)
+        ''' pour chaque résume de film ecrire le nombre d'occurence
+        des mots
         ARGUMENTS :
             id_film (int) : 
-        SORTIE : creer un fichier id_film_freq.txt de la forme:
-        id_mot1 mot1 nbr_mot1
-        id_mot2 mot2 nbr_mot2
+        SORTIE : ecrit dans le fichier MoviesFrequence.txt de la forme:
+        id_film
+        id_mot nbr_mot
+        id_mot nbr_mot
+        
+        id_film2
+        id_mot nbr_mot
+        id_mot nbr_mot
         '''
-        #start = perf_counter()
-        print("SALT")
         bananasplit = self._wordsBag.getIds(movie.summary)
-
-        print(bananasplit)
+        #print(bananasplit)
         dico = dict()
-
         for word, id in bananasplit:
             dico.setdefault(id, 0)
             dico[id] += 1
-        print(dico)
+        #print(dico)
 
-        #print("Taille du dico : "+str(sys.getsizeof(dico))+" bytes")
         file = open(self._filename, "a")
         file.write(movie.id+"\n")
         for w in dico:
             file.write(str(w)+" "+str(dico[w])+"\n")
-        
         file.write("\n")
-        #end = perf_counter()
-        #print("Temps écoulé : "+str(end-start)+" s")
-
 
     def computeFrequency(self):     
         with open(self._filename, "w") as file:
-            file.write("test\n")
-        print("PEPPER")
+            file.write("")
+        
         #file = open(self._filename, "a")
         
         it = self._database.iterator()
