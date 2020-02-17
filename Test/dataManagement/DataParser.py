@@ -16,7 +16,7 @@ from pathlib import Path
         fiche = db.getMovie(i)
         if fiche not None:
             print(fiche.toString()) #affichage de la fiche
-            print(fiche.wikiId, fiche.title, fiche.summary) #affichage de certaines informations
+            print(fiche.id, fiche.title, fiche.summary) #affichage de certaines informations
         else :
             print("Aucune fiche trouvée")
 '''
@@ -25,8 +25,8 @@ from pathlib import Path
 
 #%%
 class MovieData:
-    def __init__(self, wiki_id, title, release_date, length, genre, summary):
-        self.wikiId = wiki_id
+    def __init__(self, id, title, release_date, length, genre, summary):
+        self.id = id
         self.title = title
         self.releaseDate = release_date
         self.length = length
@@ -34,7 +34,7 @@ class MovieData:
         self.summary = summary
     
     def toString(self):
-        return '<Film : wikiId= {0}, nom={1}, date_sortie={2}, genre={3}, resume={4}>'.format(self.wikiId, self.titre, self.dateSortie, self.genre, self.resume)
+        return '<Film : id= {0}, nom={1}, date_sortie={2}, genre={3}, resume={4}>'.format(self.wikiId, self.titre, self.dateSortie, self.genre, self.resume)
   
 class Database:
     def __init__(self, zip_filename_movie_data):
