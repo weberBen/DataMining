@@ -17,8 +17,9 @@ env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag
 
-Freq.parcourIterateur(database,wordsBag)
-
+F=Freq.Frequency(database,wordsBag)
+print(F._filename)
+F.computeFrequency()
 
 
 
