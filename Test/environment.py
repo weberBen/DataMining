@@ -72,10 +72,11 @@ def getPathFolder(actual_path, folder_to_reach):
     output = os.path.join(current_path,  folder_to_reach)
     
     while ((not os.path.exists(output)) or (not os.path.isdir(output))) and len(output)!=0:
-        path = str(Path(current_path))
+        path = Path(current_path)
+        path_str = str(path)
         current_path = str(path.parent)
         
-        if path == current_path:
+        if path_str == current_path:
             return None
         
         output = os.path.join(current_path,  folder_to_reach)
