@@ -127,6 +127,10 @@ class AlphabeticTree:
         return self.getId(word) is not None
     
     def getId(self, word_str):
+        
+        if word_str is None:
+            return None
+        
         node = self._tree
         
         for letter in word_str:

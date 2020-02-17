@@ -26,47 +26,49 @@ wordsBag = env_obj.WordsBag
 
 
 #%%
+movie = database.getMovie(3)
+wordsBag.getIds(movie.summary)
 
-
-print("\n------------Movies title------------")
-it = database.iterator()
-cpt = 0
-while it.hasNext():
-    movie = it.getNext()
-    print(movie.title)
-    cpt+=1
+def test():
+    print("\n------------Movies title------------")
+    it = database.iterator()
+    cpt = 0
+    while it.hasNext():
+        movie = it.getNext()
+        print(movie.title)
+        cpt+=1
+        
+        if cpt==10:
+            break
     
-    if cpt==10:
-        break
-
-
-'''
-itération sur tous les mots du dictionnaire
-'''
-print("\n------------Words registered------------")
-
-it = wordsBag.iterator()
-cpt = 0
-while it.hasNext():
-    word = it.getNext()
-    print(word)
-    cpt+=1
     
-    if cpt==10:
-        break
-
-'''
-existence d'un mot dans le dictionnaire
-'''
-
-print("\n------------Tests words in dictionnary------------")
-
-word1 = "shoot on sight"
-word3 = "Shooter"
-word4 = "geronima"
-
-
-print("1:", (wordsBag.getId(word1) is not None))
-print("3:", (wordsBag.getId(word3) is not None))
-print("4:", (wordsBag.getId(word4) is not None))
+    '''
+    itération sur tous les mots du dictionnaire
+    '''
+    print("\n------------Words registered------------")
+    
+    it = wordsBag.iterator()
+    cpt = 0
+    while it.hasNext():
+        word = it.getNext()
+        print(word)
+        cpt+=1
+        
+        if cpt==10:
+            break
+    
+    '''
+    existence d'un mot dans le dictionnaire
+    '''
+    
+    print("\n------------Tests words in dictionnary------------")
+    
+    word1 = "shoot on sight"
+    word3 = "Shooter"
+    word4 = "geronima"
+    
+    
+    print("1:", (wordsBag.getId(word1) is not None))
+    print("3:", (wordsBag.getId(word3) is not None))
+    print("4:", (wordsBag.getId(word4) is not None))
 
