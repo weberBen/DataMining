@@ -6,6 +6,10 @@ import json
 import sys
 import zipfile
 from pathlib import Path
+import sqlite3
+import ast
+import pickle
+import codecs
 
 #%%
 
@@ -21,8 +25,6 @@ from pathlib import Path
             print("Aucune fiche trouvée")
 '''
 
-
-
 #%%
 class MovieData:
     def __init__(self, id, title, release_date, length, genre, summary):
@@ -34,10 +36,140 @@ class MovieData:
         self.summary = summary
     
     def toString(self):
-        return '<Film : id= {0}, nom={1}, date_sortie={2}, genre={3}, resume={4}>'.format(self.wikiId, self.titre, self.dateSortie, self.genre, self.resume)
-  
+        return '<Film : id= {0}, nom={1}, date_sortie={2}, genre={3}, resume={4}>'.format(self.id, self.title, self.releaseDate, self.genre, self.summary)
+
+#%%
+
+class MovieHandler:
+    def __init__(self, filename):
+        self._tableName = "Movie"
+        
+        self._conn = sqlite3.connect(filename)
+        
+        if not self._tableExists(self._tableName):
+            self._createDb()
+    
+    def _tableExists(self, table_name):
+        cursor = self._conn.cursor()
+        cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}'".format(self._tableName))
+
+        #if the count is 1, then table exists
+        if cursor.fetchone()[0]==1 : 
+        	    return True
+        
+        return False
+        
+    def deleteAll(self):
+        cursor = self._conn.cursor()
+        cursor.execute("DELETE FROM "+self._tableName)
+        self._conn.commit()
+    
+    def _createDb(self):
+        cursor = self._conn.cursor()
+        cursor.execute("CREATE TABLE "+self._tableName+" (id integer, title text, releaseDate text, lenght text, genre text, summary blob)")
+        self._conn.commit()
+    
+        
+    def _addWithoutCommit(self, movieData):
+        if movieData is None :
+            logging.warning("Trying to add NoneType to sqlite")
+            return None
+        cursor = self._conn.cursor()
+        try :
+            query = "INSERT INTO "+self._tableName+' VALUES ({0}, "{1}", "{2}", "{3}", "{4}", "{5}")'.format(movieData.id, self._encode(movieData.title), self._encode(movieData.releaseDate), self._encode(movieData.length), self._encode(movieData.genre), self._encode(movieData.summary))
+        except sqlite3.OperationalError as e:
+            logging.warning(query)
+            raise sqlite3.OperationalError(e)
+        
+        cursor.execute(query)
+        
+    def add(self, movieData):
+        
+        if not type(movieData)==list:
+            movieData = [movieData]
+        
+        for movie in movieData:
+            self._addWithoutCommit(movie)
+        
+        self._conn.commit()
+    
+    def _encode(self, obj):
+        txt =  codecs.encode(pickle.dumps(obj), "base64").decode()
+        txt = txt.__repr__()
+        
+        return txt
+    
+    def _decode(self, txt):
+        txt = ast.literal_eval(txt)
+        txt = pickle.loads(codecs.decode(txt.encode(), "base64"))
+        
+        return txt
+        
+    def _rowToMovie(self, row):
+        id, title, release_date, length, genre, summary = row[0], self._decode(row[1]), self._decode(row[2]), self._decode(row[3]), self._decode(row[4]), self._decode(row[5]) 
+        output = MovieData(id, title, release_date, length, genre, summary)
+        
+        return output
+    
+    def getMovie(self, movie_id):
+        cursor = self._conn.cursor()
+        cursor.execute(("SELECT * FROM "+self._tableName+" where id={0}").format(movie_id))
+        rows = cursor.fetchall()
+        
+        output = None
+        count = 0
+        for row in rows:
+            
+            output = self._rowToMovie(row)
+            
+            count+=1
+        
+        if count==0:
+            return None
+        
+        if count!=1:
+            logging.debug("multiple declations of the same id in sqlite")
+        
+        return output
+    
+    def close(self):
+        self._conn.close()
+    
+    def iterator(self):
+        return self._Iterator(self)
+    
+    class _Iterator:
+        def __init__(self, movieHandler):
+            self._movieHandler = movieHandler
+            self._cursor = movieHandler._conn.cursor()
+            self._cursor.execute("SELECT * FROM "+movieHandler._tableName)
+            
+            self._next = self._getNext()
+            if self._next is None:
+                self._hasNext = False
+            else:
+                self._hasNext = True
+        
+        def hasNext(self):
+            return self._hasNext
+        
+        def _getNext(self):
+            return self._cursor.fetchone()
+            
+        def getNext(self):
+            tmp = self._next
+            self._next = self._getNext()
+            
+            if self._next is None:
+                self._hasNext = False
+            
+            return self._movieHandler._rowToMovie(tmp)
+    
+        
+#%%
+
 class Database:
-    def __init__(self, zip_filename_movie_data):
+    def __init__(self, movies_data_filename):
         '''
         Création d'un object base de données
         
@@ -47,20 +179,13 @@ class Database:
         '''
         logging.info("starting database")
         
-        if not os.path.exists(zip_filename_movie_data) or not os.path.isfile(zip_filename_movie_data):
+        if movies_data_filename is None:
             logging.warning("archive de la base de données introuvabale")
             sys.exit()
         
-        self._zippedFolder = zipfile.ZipFile(zip_filename_movie_data, 'r')
-        self._folderDataName = Path(self._zippedFolder.filename).stem
-        self._index = 0
+        self._movieHandler = MovieHandler(movies_data_filename)
         logging.info("database started")
     
-    def _getDataFilename(self, index):
-        return os.path.join(self._folderDataName, "{0}.json".format(index))
-    
-    def _fileExists(self, filename):
-        return (filename in self._zippedFolder.namelist())
     
     def getMovie(self, index):
         '''
@@ -70,45 +195,18 @@ class Database:
             index (int) : index de la fiche (de 0 à (n-1) où n est le nombre de fiches)
         '''
         
-        if index<0:
+        if type(index)!=int:
+            logging.warning("Type of movie id must be integer")
             return None
         
-        movie_data = None
-        filename = self._getDataFilename(index)
-        if not self._fileExists(filename):
-            return None
-        
-        b_json_file = self._zippedFolder.read(filename)
-        json_file = b_json_file.decode('utf8')
-        
-        data = json.loads(json_file)
-        wiki_id, title, release_date, length, genre, summary = data["wikiId"], data["titre"], data["dateSortie"], data["duree"], data["genre"], data["resume"]
-        movie_data = MovieData(wiki_id, title, release_date, length, genre, summary)
-        
-        return movie_data
+        return self._movieHandler.getMovie(index)
     
     #-------------------------------------------
     #
     #-------------------------------------------
     
     def iterator(self):
-        return self._Iterator(self)
-    
-    class _Iterator():
-        def __init__(self, database):
-            self._database = database
-            self._index = 0
-        
-        def hasNext(self):
-            return self._database._fileExists(self._database._getDataFilename(self._index))
-        
-        def getNext(self):
-            data = self._database.getMovie(self._index)
-            if data is None:
-                return None
-            self._index+=1
-            
-            return data
+        return self._movieHandler.iterator()
             
             
 

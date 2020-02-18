@@ -11,7 +11,10 @@ import os
 import sys
 import datetime
 
-from dataManagement.Language import Language
+if __name__ == "__main__":
+    from dataManagement.Language import Language
+else:
+    from Language import Language
 
 '''
 import nltk

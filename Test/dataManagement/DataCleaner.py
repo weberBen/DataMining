@@ -4,9 +4,13 @@
 import csv
 import ast
 import logging
-import os
-import json
 import modules.unwiki as unwiki
+import datetime
+
+if __name__ == "__main__":
+    from DataParser import MovieHandler, MovieData
+else :
+    from dataManagement.DataParser import MovieHandler, MovieData
 
 #%%__init__
 
@@ -25,7 +29,7 @@ import modules.unwiki as unwiki
 
 
 #%%
-class Movie:
+class _Movie:
   def __init__(self, name, release_date, length, language, countries, genre, _id=-1):
     self.name = name
     self.releaseDate = release_date
@@ -57,7 +61,7 @@ def readDataTable(filename):
         for row in csv_reader:
             wiki_id, freebase_id, name, release_date, revenue, length, language, countries, genre = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8]
             genre_dico = ast.literal_eval(genre)
-            table[wiki_id] = Movie(name, release_date, length, language, countries, genreToList(genre_dico))
+            table[wiki_id] = _Movie(name, release_date, length, language, countries, genreToList(genre_dico))
             
         return table
     
@@ -126,8 +130,7 @@ def cleanSummary(summary):
     
     return unwiki_str
 
-    
-def cleanSummaries(summaries_filename, movies_table, output_folder):
+def cleanSummaries(summaries_filename, movies_table, movieHandler, count_item=100):
     '''
     Ecrit dans un fichier propre à chaque film les informations de ce dernier ainsi que son résumé. Les fiches sont numérotées dans l'ordre de lecture en débutant à 0
     
@@ -149,28 +152,23 @@ def cleanSummaries(summaries_filename, movies_table, output_folder):
                 logging.warning("Le film \""+movie_id+"\" n'est pas dans la table de référencement")
                 continue
             
-            film_data = movies_table[movie_id]
-            
-            data = {}
-            data["wikiId"] = movie_id
-            data["titre"] = film_data.name
-            data["dateSortie"] = film_data.releaseDate
-            data["duree"] = film_data.length
-            data["genre"] = film_data.genre
-            data["resume"] = cleanSummary(res.data)
+            data = movies_table[movie_id]
             
             
-            path_ = os.path.join(output_folder, "{0}.json".format(cpt))
-            with open(path_, 'w') as outfile:
-                json.dump(data, outfile)
+            movie = MovieData(movie_id, data.name, data.releaseDate, data.length, data.genre, cleanSummary(res.data))
+            movieHandler.add(movie)
             
+            if cpt%count_item==0:
+                logging.info("{0} items has been browse since the begining ({1})".format(cpt, datetime.datetime.now()))
             
             cpt+=1
             
             
+
+
 #%%
 
-def clean(movies_table_filename, summaries_filename, output_folder):
+def clean(movies_table_filename, summaries_filename, output_filename, count_item=100):
     '''
     Ecrit dans un fichier propre à chaque film les informations de ce dernier ainsi que son résumé. Les fiches sont numérotées dans l'ordre de lecture en débutant à 0
     
@@ -181,7 +179,15 @@ def clean(movies_table_filename, summaries_filename, output_folder):
     SORTIE :
         None
     '''
+    movieHandler = MovieHandler(output_filename)
     movies_table = readDataTable(movies_table_filename)
-    cleanSummaries(summaries_filename, movies_table, output_folder)
+    cleanSummaries(summaries_filename, movies_table, movieHandler, count_item)
 
 #%%
+
+'''
+movies_table_filename = '/home/benjamin/Téléchargements/MovieSummaries/movie.metadata.tsv'
+summaries_filename = '/home/benjamin/Téléchargements/MovieSummaries/plot_summaries.txt' 
+output_filename = '/home/benjamin/Téléchargements/MovieSummaries/outdb.db'
+count_item = 1000
+m=clean(movies_table_filename, summaries_filename, output_filename, count_item)'''

@@ -22,12 +22,10 @@ wordsBag = env_obj.WordsBag
 
 
 
-#%%
 
 
 #%%
-movie = database.getMovie(3)
-wordsBag.getIds(movie.summary)
+
 
 def test():
     print("\n------------Movies title------------")
@@ -72,3 +70,5 @@ def test():
     print("3:", (wordsBag.getId(word3) is not None))
     print("4:", (wordsBag.getId(word4) is not None))
 
+#%%
+test()
