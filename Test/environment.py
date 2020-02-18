@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 from dataManagement.DataParser import Database
-from dataManagement.Dictionnary import WordsBag
+from dataManagement.Dictionary import WordsBag
 
 _DATASET_FOLDER_NAME = "Dataset"
 

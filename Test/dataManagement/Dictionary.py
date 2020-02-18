@@ -209,9 +209,9 @@ class WordsBag:
             sys.exit()
         
         self._filename = filename
-        logging.info("loading dictionnary")
+        logging.info("loading dictionary")
         self._dico = AlphabeticTree(filename, erease)
-        logging.info("dictionnary loaded")
+        logging.info("dictionary loaded")
         self._Language = Language
     
     def populateFromTxt(self, txt):
@@ -237,7 +237,7 @@ class WordsBag:
         return self._dico.size()
     
     def initialize(self, database_obj, count_item=100):
-        logging.info("initialize dictionnary from database...")
+        logging.info("initialize dictionary from database...")
         it = database_obj.iterator()
         
         cpt=1
@@ -251,7 +251,7 @@ class WordsBag:
                 
             cpt+=1
         
-        logging.info("dictionnary has been initialized from database")
+        logging.info("dictionary has been initialized from database")
     
     def getIds(self, txt):
         clean_txt = self._Language.broom(txt)
@@ -271,7 +271,7 @@ class WordsBag:
 import DataParser
 db = DataParser.Database('/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Dataset/CleanMovieData')
 
-dico = WordsBag('/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Dataset/dictionnary')
+dico = WordsBag('/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Dataset/dictionary')
 #dico.initialize(db)
 
 print(dico.size())
@@ -296,7 +296,7 @@ print(y.read(1))
 '''
 
 '''
-tree = AlphabeticTree('/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Test/dataManagement/Dictionnary.py')
+tree = AlphabeticTree('/home/benjamin/Documents/UPMC/L3/Projet_Math/DataMining/Test/dataManagement/Dictionary.py')
 tree.addWord("bonjour")
 
 tree.addWord("bonsoir")

@@ -59,7 +59,7 @@ def test():
     existence d'un mot dans le dictionnaire
     '''
     
-    print("\n------------Tests words in dictionnary------------")
+    print("\n------------Tests words in dictionary------------")
     
     word1 = "shoot on sight"
     word3 = "Shooter"

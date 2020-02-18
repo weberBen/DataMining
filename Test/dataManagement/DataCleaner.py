@@ -106,7 +106,7 @@ def genreToList(genre_dico):
     Les genres des films se présentent sous la forme d'un dictionnaire que l'on converti en simple liste
     
      ARGUMENTS :
-        genre_dico (dictionnary) : dictionnaire dont les valeurs sont les genres du film
+        genre_dico (dictionary) : dictionnaire dont les valeurs sont les genres du film
     SORTIE :
         liste de string représentant le genre du film
     '''
@@ -136,7 +136,7 @@ def cleanSummaries(summaries_filename, movies_table, movieHandler, count_item=10
     
     ARGUMENTS :
         fichier_resumes (string) : chemin du fichier contenant tous les résumes au format <identifiant wikipedia>[espace\tabulation]<texte du résumé>
-        table_films (dictionnary) : dictionnaire associant l'indentifiant wikipédia du film et ses informations 
+        table_films (dictionary) : dictionnaire associant l'indentifiant wikipédia du film et ses informations 
         dossier_de_sortie (string) : chemin vers le dossier où seront écrites les fiches des films
     SORTIE :
         None
