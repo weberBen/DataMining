@@ -22,8 +22,11 @@ https://github.com/nltk/nltk/issues/2029 et https://bugs.python.org/issue28150
 
 Nous appuyons nos tests sur une version modifiée du corpus de résumés de film disponible [ici](http://www.cs.cmu.edu/~ark/personas/)
 
+
 Chaque résumé de film a été fusionné avec ses informations (comme l'idenfitiant du film, son titre, etc) et inséré dans une base de donnée SQL pour accélérer le recherche d'un film par son identifiant.
+
 D'autres part, les résumés de films, étant issus de la base *Wikipedia*, contiennent des marqueurs qui ont dû être supprimés dans notre base de données. Il s'avère également que certains résumés ne comporte aucune information sur le film en lui même (seulement la distribution des rôles par exemple); sur ce point ne nous pas jugé utile de les modifier étant donnée la charge de travail necéssaire.
+
 Finnalement, certains résumés de film n'ont pas de correspondances dans la base de données originales. En d'autres mots, il est impossible de rélier certains résumés à des films. Ces derniers n'ont donc pas été ajoutés à notre base de données. C'est le cas des résumés dont l'identifiant est :
 
 ```
