@@ -5,29 +5,60 @@ import re
 from string import punctuation
 from time import perf_counter
 from pathlib import Path
+import os
 
 from dataManagement.Language import Language
 
 
 class MovieFreq:
-    def __init__(self, id, list_freq):
+    def __init__(self,filename, id):
+        self.filename = filename
         self.id = id
-        self._listFreq = list_freq 
+        self.file=open(self.filename,"rb")
+    
     
     def iterator(self):
-        return _Iterator()
+        return self._Iterator(self.filename,self.id,self.file)
 
-    class _Iterator:
-        def __init__(self, filename):
-            self._filename = filename
+    class _Iterator():
+        def __init__(self, filename,id,file):
+            self.filename = filename
+            self.id = id
+            self.file=file
 
         
         def hasNext(self):
-            return None
+            cpt=0
+            left_lines = self.file.readlines()
+            if len(left_lines)==0:
+
+                return False
+            for line in left_lines:
+                if(cpt==1):
+
+                    return True
+                if(line=='\n'):
+                    cpt+=1
+                    continue
+
         
         def getNext(self):
-            return (id_word, freq)
-
+            right_to_return=False
+            #(self.file).seek(0,os.SEEK_CUR)    
+            #line=(self.file).readline()
+            cpt=0
+            for line in (self.file).readlines():
+                cpt+=1
+                print(line.decode('utf-8'))
+                if(right_to_return==True):
+                    (self.file).seek(cpt,1)
+                    self.id=line.decode('utf-8')
+                    return (self.filename,self.id,self.file)
+                if(line==b'\r\n'):
+                    print("SLT")
+                    right_to_return=True
+            return None
+    
 
 class Frequency:
     def __init__(self, database, wordsBag):
