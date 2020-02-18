@@ -47,7 +47,7 @@ class EnvVar:
     
     def _getDatabase(self, info=None):
         if info is None:
-            path = os.path.join(self.rootDirectory, "CleanMovieData.zip")
+            path = os.path.join(self.rootDirectory, "moviesData.db")
         else:
             if info.ignore:
                 return None
@@ -56,7 +56,7 @@ class EnvVar:
     
     def _getWordsBag(self, info=None):
         if info is None:
-            path = os.path.join(self.rootDirectory, "dictionnary.json")
+            path = os.path.join(self.rootDirectory, "dictionary.json")
             erease = False
         else:
             if info.ignore:

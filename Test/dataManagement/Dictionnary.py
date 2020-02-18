@@ -12,9 +12,10 @@ import sys
 import datetime
 
 if __name__ == "__main__":
-    from dataManagement.Language import Language
-else:
     from Language import Language
+else:
+    from dataManagement.Language import Language
+    
 
 '''
 import nltk
