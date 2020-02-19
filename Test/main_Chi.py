@@ -18,9 +18,11 @@ database = env_obj.Database
 wordsBag = env_obj.WordsBag
 
 if __name__ == "__main__":
-    A, V = createTFMatrixV2("./querySystem", mute = False)
+    N = 10
+    A, V, table = createTFMatrixV3(N, mute = False)
     print(A.toarray())
     print(V.toarray())
+    print(table)
     print(wordsBag.getIds("Bonjour"))
     Q = createQueryVect(wordsBag, input("Recherche : "))
     print(Q)
