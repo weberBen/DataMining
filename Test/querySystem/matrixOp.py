@@ -116,7 +116,7 @@ def cosNorm(Q, C):
     """
     CSC * CSC -> float
     """
-    return Q.multiply(C).sum()/(np.sqrt(Q.multiply(Q).sum())*np.sqrt(C.multiply(C).sum()))
+    return max(Q.multiply(C).sum()/np.sqrt(Q.multiply(Q).sum()*C.multiply(C).sum()),1e-10)
 
 def getMostRelevantDoc(M, V, Q, mute = True):
     """
