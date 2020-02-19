@@ -25,8 +25,8 @@ import Frequency.SummaryWordFrequency as SWF
 ###############################################
 
 class TDMvm:
-    def __init__(self, path):
-        self.mat, self.idf = createTFMatrixV3(path)
+    def __init__(self, N, path):
+        self.mat, self.idf, self.table = createTFMatrixV3(N, path, mute = True)
 
     def toStr(self):
         print("Matrice Termes-Documents (TF) :\n",self.mat.toarray())
@@ -39,7 +39,7 @@ class TDMvm:
 def addDocumentToMatrix(M, V, mat):
     pass
 
-def createTFMatrixV3(N, mute = True):
+def createTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
     """
     int * bool -> CSC | None
     Retourne la matrice termes-documents TF dont
@@ -51,20 +51,20 @@ def createTFMatrixV3(N, mute = True):
         print("sizeof(data) : "+str(sys.getsizeof(data)))
         print("sizeof(indices) : "+str(sys.getsizeof(indices)))
         print("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
-        print("createTFMatrixV2 - Taille CSC : "+str(sys.getsizeof(M))+" bytes")
+        print("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
         print("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
     indices = []
     indptr = [0]
-    table = array.array('i', [])
+    table = array.array('i')
     headIndex = 0
     tailIndex = 0
     i = 0
     subTotal = 0
     start = perf_counter()
-    F = SWF.Frequency(None, None, "../MoviesFrequence.txt")
+    F = SWF.Frequency(None, None, pathref)
     it = F.iterator2()
     while i < N and it.hasNext():
         m = it.getNext()
@@ -118,36 +118,27 @@ def cosNorm(Q, C):
     """
     return Q.multiply(C).sum()/(np.sqrt(Q.multiply(Q).sum())*np.sqrt(C.multiply(C).sum()))
 
-def getMostRelevantDoc(tdm, Q, mute = True):
+def getMostRelevantDoc(M, V, Q, mute = True):
     """
-    TDMvm * CSC -> int * float
+    CSC * CSC * CSC -> int * float
     """
-    M, V = tdm.mat, tdm.idf
     ql = Q.shape[0]
     m, n = M.shape
-    #topscl = array.array('f')
     maxsco = 0.0
     imax = 0
     i = 0
     start = perf_counter()
     if ql < m:
         Q.resize(V.shape)
-        while i < n:
-            scoi = cosNorm(Q, M[i])
-            if maxsco < scoi:
-                maxsco = scoi
-                imax = i
-            #topscl.append(cosNorm(Q, M[i]))
-            i += 1
     else:
-        qs = Q.shape
-        while i < n:
-            tmp = M[i].copy()
-            scoi = cosNorm(Q, tmp.resize(qs))
-            if maxsco < scoi:
-                maxsco = scoi
-                imax = i
-            i += 1
+        Q = Q[:m]
+    Q = Q.multiply(V)
+    while i < n:
+        scoi = cosNorm(Q, M[i])
+        if maxsco < scoi:
+            maxsco = scoi
+            imax = i
+        i += 1
     end = perf_counter()
     if not mute:
         print("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
@@ -172,11 +163,12 @@ def main(args = None):
     # la matrice CSR en matrice normale
     #print(createTFMatrixV1().toarray())
     #print("")
-    print(os.getcwd())
+    #print(os.getcwd())
     print("Création de la matrice termes-documents")
     N = int(input("Nombre de films à inclure : "))
-    A, V, table = createTFMatrixV3(N, mute = False)
+    A, V, table = createTFMatrixV3(N, "../MoviesFrequence.txt", mute = False)
     print(A.toarray())
+    print("Taille matrix complete : "+str(sys.getsizeof(A.toarray()))+" bytes")
     print(A.shape)
     print(V.toarray())
     print(V.shape)
