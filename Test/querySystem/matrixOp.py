@@ -133,7 +133,7 @@ def getMostRelevantDoc(M, V, Q, mute = True):
     else:
         Q = Q[:m]
     while i < n:
-        scoi = cosNorm(Q, M[i].multiply(V))
+        scoi = cosNorm(Q, M[:,i].multiply(V))
         if maxsco < scoi:
             maxsco = scoi
             imax = i
