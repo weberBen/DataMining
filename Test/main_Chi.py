@@ -28,9 +28,10 @@ if __name__ == "__main__":
     if len(table) < 50:
         print(table)
     #print(wordsBag.getIds("Bonjour"))
-    Q = createQueryVect(wordsBag, input("Recherche : "))
-    print(Q)
-    imax, maxsco = getMostRelevantDoc(A, V, Q, mute = False)
-    print("Score max : "+str(maxsco)+"\nDocument : "+str(table[imax]))
+    while 1:
+        Q = createQueryVect(wordsBag, input("Recherche : "))
+        print(Q)
+        imax, maxsco = getMostRelevantDoc(A, V, Q, mute = False)
+        print("Score max : "+str(maxsco)+"\nDocument : "+str(table[imax]))
 
 #%%
