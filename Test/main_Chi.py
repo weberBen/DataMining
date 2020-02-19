@@ -23,8 +23,9 @@ if __name__ == "__main__":
     A, V, table = createTFMatrixV3(N, "MoviesFrequence.txt", mute = False)
     print(A.toarray())
     print(V.toarray())
-    print(table)
-    print(wordsBag.getIds("Bonjour"))
+    if len(table) < 10:
+        print(table)
+    #print(wordsBag.getIds("Bonjour"))
     Q = createQueryVect(wordsBag, input("Recherche : "))
     print(Q)
     imax, maxsco = getMostRelevantDoc(A, V, Q, mute = False)
