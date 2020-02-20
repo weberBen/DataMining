@@ -13,11 +13,11 @@ info = Env.Info()
 wordsBagInfo = Env.WordsBagInfo(ignore=True)
 info = Env.Info(wordsBagInfo=wordsBagInfo)
 '''
-
+'''
 env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag
-Freq = env_obj.Frequency
+Freq = env_obj.Frequency'''
 
 if __name__ == "__main__":
     '''
@@ -42,11 +42,17 @@ if __name__ == "__main__":
             print("Rien trouvé")
     '''
     
-    N = int(input("Nombre de documents : "))
-    print("Création de la matrice termes-documents sur les "+str(N)+" premiers films")
-    r = Request(database, wordsBag, "matrix", N)
-    while 1:
-        movie = r.search(input("Recherche : "))
+    #N = int(input("Nombre de documents : "))
+    N = 10
+    matrix = "matrix_"+str(N)
+    r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
+    #r.create(matrix, erease=True, number_movies=N)
+    r.load(matrix)
+    while True:
+        raw = input("Recherche : ")
+        if raw=="quit":
+            break
+        movie = r.search(raw)
         if movie is not None:
             print(movie.title)
         

@@ -17,6 +17,7 @@ import Frequency.SummaryWordFrequency as SWF
 
 _DATASET_FOLDER_NAME = "Dataset"
 
+
 #%%
 
 
@@ -48,12 +49,20 @@ class Info:
 #%%
         
 class EnvVar:
-    def __init__(self, root_directory, info = Info()):
+    def __init__(self, root_directory, info = Info(), ignore_all = False):
         self.rootDirectory = root_directory
         
-        self.Database = self._getDatabase(info.databaseInfo)
-        self.WordsBag = self._getWordsBag(info.wordsBagInfo)
-        self.Frequency = self._getFreq(info.frequencyInfo)
+        if not ignore_all:
+            self.Database = self._getDatabase(info.databaseInfo)
+            self.WordsBag = self._getWordsBag(info.wordsBagInfo)
+            self.Frequency = self._getFreq(info.frequencyInfo)
+        
+    
+    def getDatasetFolder(self):
+        return self.rootDirectory
+    
+    def getMatrixFolder(self):
+        return os.path.join(self.rootDirectory, "matrix")
     
     def _getDatabase(self, info=None):
         if info is None:

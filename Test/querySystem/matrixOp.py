@@ -23,31 +23,67 @@ import uuid
 #%%
 
 class Request:
-    def __init__(self, database, wordsBag, Frequency, filename, numberMovie=None):
+    def __init__(self, database, wordsBag, Frequency, matrix_folder):
+        
+        self._rootDirectory = matrix_folder
+        self._database = database
+        self._wordsBag = wordsBag
+        self._Frequency = Frequency
         
         self._matrix = None
         self._idf = None
         self._table = None
         
-        if not os.path.exists(filename) or not os.path.isfile(filename):
-            logging.info("creation of matrix under ", filename)
-            self._matrix, self._idf, self._table = createTFMatrixV4(numberMovie, Freq)
+    def _create(self, filename, number_movie):
+        logging.info("creation of matrix under <<"+str(filename)+">>")
+        self._matrix, self._idf, self._table = createTFMatrixV4(number_movie, self._Frequency)
             
-            pickle.dump([self._matrix, self._idf, self._table],  open(filename, "w" ))
+        with open(filename, "wb" ) as file:
+            pickle.dump([self._matrix, self._idf, self._table], file)
+        
+    def create(self, matrix_name, erease=False, number_movies=None):
+        filename = os.path.join(self._rootDirectory, matrix_name)
+        
+        if os.path.exists(filename) and os.path.isfile(filename):
+            if erease :
+                logging.info("overwriting file <<"+str(filename)+">>")
+                self._create(filename, number_movies)
+            else:
+                logging.warning("error during creation of matrix : cannot overwrite file <<"+str(filename)+">>")
+                sys.exit()
+        else :
+            self._create(filename, number_movies)
+    
+    def _load(self, filename):
+        logging.info("loading matrix from <<"+str(filename)+">>")
+        with open(filename, "rb" ) as file:
+            tmp = pickle.load(file)
+        self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
+    
+    def load(self, matrix_name):
+        filename = os.path.join(self._rootDirectory, matrix_name)
+        
+        if not os.path.exists(filename) or not os.path.isfile(filename):
+            logging.error("file <<"+str(filename)+">> does not exists")
+            sys.exit()
         else:
-            logging.info("loading matrix from ", filename)
-            tmp = pickle.load(filename)
-            self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
+            self._load(filename)
     
     def search(self, txt):
-        Q = createQueryVect(wordsBag, txt)
+        
+        if self._matrix is None or self._idf is None or self._table is None:
+            logging.error("elements for search has not been initialized")
+            return None
+        
+        Q = createQueryVect(self._wordsBag, txt)
         imax, maxsco = getMostRelevantDoc(self._matrix, self._idf, Q)
         if imax is not None:
-            logging.debug("Score max : "+str(maxsco)+"\nMovieID : "+str(table[imax]))
-            logging.debug("Titre du film :"+database.getMovie(table[imax]).title)
-            return database.getMovie(table[imax])
+            movie = self._database.getMovie(self._table[imax])
+            logging.debug("Score max : "+str(maxsco)+"\nMovieID : "+str(self._table[imax]))
+            logging.debug("Titre du film :"+movie.title)
+            return movie
         else:
-            logging.info("Rien trouvé")
+            logging.debug("Rien trouvé")
             return None
     
     
@@ -65,8 +101,8 @@ class TDMvm:
         self.mat, self.idf, self.table = createTFMatrixV4(N, Freq, mute = True)
 
     def toStr(self):
-        logging.info("Matrice Termes-Documents (TF) :\n",self.mat.toarray())
-        logging.info("Vecteur IDF :\n",self.idf.toarray())
+        logging.info("Matrice Termes-Documents (TF) :\n"+str(self.mat.toarray()))
+        logging.info("Vecteur IDF :\n"+str(self.idf.toarray()))
 
 ###################################################
 #--------------------FUNCTIONS--------------------#
@@ -84,12 +120,12 @@ def createTFMatrixV4(N, Freq, mute = True):
     dans les documents
     """
     def varsizecheck(data, indices, indptr, M, V):
-        logging.info("createMatrixV2 - Tailles des var intermédiaires")
-        logging.info("sizeof(data) : "+str(sys.getsizeof(data)))
-        logging.info("sizeof(indices) : "+str(sys.getsizeof(indices)))
-        logging.info("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
-        logging.info("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
-        logging.info("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+        logging.debug("createMatrixV2 - Tailles des var intermédiaires")
+        logging.debug("sizeof(data) : "+str(sys.getsizeof(data)))
+        logging.debug("sizeof(indices) : "+str(sys.getsizeof(indices)))
+        logging.debug("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
+        logging.debug("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
+        logging.debug("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
@@ -131,7 +167,7 @@ def createTFMatrixV4(N, Freq, mute = True):
     end = perf_counter()
     if not mute:
         varsizecheck(data, indices, indptr, M, V)
-        logging.info("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
+        logging.debug("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
     return M, V, table
 
 
@@ -148,7 +184,7 @@ def createQueryVect(wordsbag, sentence, mute = True):
     Q = scs.csc_matrix((data, indices, indptr), dtype = int)
     end = perf_counter()
     if not mute:
-        logging.info("createQueryVect - Temps pris : "+str(end-start)+"s")
+        logging.debug("createQueryVect - Temps pris : "+str(end-start)+"s")
     return Q
 
 
@@ -184,7 +220,7 @@ def getMostRelevantDoc(M, V, Q, mute = True):
         i += 1
     end = perf_counter()
     if not mute:
-        logging.info("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
+        logging.debug("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
     return imax, maxsco
 
 
