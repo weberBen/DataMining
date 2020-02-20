@@ -161,6 +161,7 @@ class Frequency:
     class _Iterator2:
         def __init__(self, filename):
             self._file = open(filename, 'r')
+            self._line = self._file.readline()
             
             self._next = self._readMovieFreq()
             if self._next is None:
@@ -173,12 +174,12 @@ class Frequency:
             return self._hasNext
         
         def _readMovieFreq(self):
-            line = self._file.readline()
+            line = self._line
             if line is None:
                 return None
-                
-            id_movie = int(line)
             
+            
+            id_movie = int(line)
             list_freq = []
             #print("-----------------")
             while True:
@@ -196,6 +197,12 @@ class Frequency:
                 #print("gdggd id_word, freq", id_word, freq)
                 list_freq.append((id_word, freq))
                 #print(list_freq)
+            
+            self._line = self._file.readline()
+            if len(self._line)==0 : #fin du fichier
+                self._line = None
+                self._hasNext = False
+            
             return id_movie, list_freq
                 
         def getNext(self):

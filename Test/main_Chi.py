@@ -13,11 +13,11 @@ info = Env.Info()
 wordsBagInfo = Env.WordsBagInfo(ignore=True)
 info = Env.Info(wordsBagInfo=wordsBagInfo)
 '''
-'''
+
 env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag
-Freq = env_obj.Frequency'''
+Freq = env_obj.Frequency
 
 if __name__ == "__main__":
     '''
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     
     #N = int(input("Nombre de documents : "))
     N = 10
-    matrix = "matrix_"+str(N)
+    matrix = "matrix_"+"all"
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
-    #r.create(matrix, erease=True, number_movies=N)
+    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
     r.load(matrix)
     while True:
         raw = input("Recherche : ")

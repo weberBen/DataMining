@@ -18,7 +18,7 @@ from time import perf_counter
 import logging
 import pickle
 import uuid
-
+import datetime
         
 #%%
 
@@ -34,25 +34,25 @@ class Request:
         self._idf = None
         self._table = None
         
-    def _create(self, filename, number_movie):
+    def _create(self, filename, number_movie, count_item):
         logging.info("creation of matrix under <<"+str(filename)+">>")
-        self._matrix, self._idf, self._table = createTFMatrixV4(number_movie, self._Frequency)
+        self._matrix, self._idf, self._table = createTFMatrixV4(number_movie, self._Frequency, count_item)
             
         with open(filename, "wb" ) as file:
             pickle.dump([self._matrix, self._idf, self._table], file)
         
-    def create(self, matrix_name, erease=False, number_movies=None):
+    def create(self, matrix_name, erease=False, number_movies=None, count_item = 100):
         filename = os.path.join(self._rootDirectory, matrix_name)
         
         if os.path.exists(filename) and os.path.isfile(filename):
             if erease :
                 logging.info("overwriting file <<"+str(filename)+">>")
-                self._create(filename, number_movies)
+                self._create(filename, number_movies, count_item)
             else:
                 logging.warning("error during creation of matrix : cannot overwrite file <<"+str(filename)+">>")
                 sys.exit()
         else :
-            self._create(filename, number_movies)
+            self._create(filename, number_movies, count_item)
     
     def _load(self, filename):
         logging.info("loading matrix from <<"+str(filename)+">>")
@@ -112,7 +112,7 @@ def addDocumentToMatrix(M, V, mat):
     pass
 
 
-def createTFMatrixV4(N, Freq, mute = True):
+def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     """
     int * bool -> CSC | None
     Retourne la matrice termes-documents TF dont
@@ -139,8 +139,16 @@ def createTFMatrixV4(N, Freq, mute = True):
     start = perf_counter()
     F = Freq
     it = F.iterator2()
-    while (i < N or N is None) and it.hasNext():
+    cpt = 1
+    
+    while (N is None or i < N) and it.hasNext():
         m = it.getNext()
+        
+        if cpt%count_item==0:
+            logging.info("{0} items has been browse since the begining ({1})".format(cpt, datetime.datetime.now()))
+            
+        cpt+=1
+        
         table.append(m.id)
         itt = m.iterator()
         subTotal = 0
@@ -156,6 +164,8 @@ def createTFMatrixV4(N, Freq, mute = True):
             headIndex += 1
         headIndex += 1
         i += 1
+    
+    logging.info("creation of the matrix")
     M = scs.csc_matrix((data, indices, indptr), dtype = float)
     m,n = M.shape
     i = 0
@@ -163,6 +173,7 @@ def createTFMatrixV4(N, Freq, mute = True):
     while i < m:
         V.append(np.log(n/max(0.001, M.getrow(i).count_nonzero())))
         i += 1
+    logging.info("creation of the vector")
     V = scs.csc_matrix((V, range(len(V)), [0, len(V)]), dtype = float)
     end = perf_counter()
     if not mute:
