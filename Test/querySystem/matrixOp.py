@@ -15,22 +15,58 @@ import array
 import glob
 from pathlib import Path
 from time import perf_counter
+import logging
+import pickle
+import uuid
 
-sys.path.insert(0, '..')
+        
+#%%
 
-import Frequency.SummaryWordFrequency as SWF
+class Request:
+    def __init__(self, database, wordsBag, Frequency, filename, numberMovie=None):
+        
+        self._matrix = None
+        self._idf = None
+        self._table = None
+        
+        if not os.path.exists(filename) or not os.path.isfile(filename):
+            logging.info("creation of matrix under ", filename)
+            self._matrix, self._idf, self._table = createTFMatrixV4(numberMovie, Freq)
+            
+            pickle.dump([self._matrix, self._idf, self._table],  open(filename, "w" ))
+        else:
+            logging.info("loading matrix from ", filename)
+            tmp = pickle.load(filename)
+            self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
+    
+    def search(self, txt):
+        Q = createQueryVect(wordsBag, txt)
+        imax, maxsco = getMostRelevantDoc(self._matrix, self._idf, Q)
+        if imax is not None:
+            logging.debug("Score max : "+str(maxsco)+"\nMovieID : "+str(table[imax]))
+            logging.debug("Titre du film :"+database.getMovie(table[imax]).title)
+            return database.getMovie(table[imax])
+        else:
+            logging.info("Rien trouvé")
+            return None
+    
+    
+
+
+
+#%%
 
 ###############################################
 #--------------------CLASS--------------------#
 ###############################################
 
 class TDMvm:
-    def __init__(self, N, path):
-        self.mat, self.idf, self.table = createTFMatrixV3(N, path, mute = True)
+    def __init__(self, N, Freq):
+        self.mat, self.idf, self.table = createTFMatrixV4(N, Freq, mute = True)
 
     def toStr(self):
-        print("Matrice Termes-Documents (TF) :\n",self.mat.toarray())
-        print("Vecteur IDF :\n",self.idf.toarray())
+        logging.info("Matrice Termes-Documents (TF) :\n",self.mat.toarray())
+        logging.info("Vecteur IDF :\n",self.idf.toarray())
 
 ###################################################
 #--------------------FUNCTIONS--------------------#
@@ -39,7 +75,8 @@ class TDMvm:
 def addDocumentToMatrix(M, V, mat):
     pass
 
-def createTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
+
+def createTFMatrixV4(N, Freq, mute = True):
     """
     int * bool -> CSC | None
     Retourne la matrice termes-documents TF dont
@@ -47,12 +84,12 @@ def createTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
     dans les documents
     """
     def varsizecheck(data, indices, indptr, M, V):
-        print("createMatrixV2 - Tailles des var intermédiaires")
-        print("sizeof(data) : "+str(sys.getsizeof(data)))
-        print("sizeof(indices) : "+str(sys.getsizeof(indices)))
-        print("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
-        print("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
-        print("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+        logging.info("createMatrixV2 - Tailles des var intermédiaires")
+        logging.info("sizeof(data) : "+str(sys.getsizeof(data)))
+        logging.info("sizeof(indices) : "+str(sys.getsizeof(indices)))
+        logging.info("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
+        logging.info("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
+        logging.info("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
@@ -64,9 +101,9 @@ def createTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
     i = 0
     subTotal = 0
     start = perf_counter()
-    F = SWF.Frequency(None, None, pathref)
+    F = Freq
     it = F.iterator2()
-    while i < N and it.hasNext():
+    while (i < N or N is None) and it.hasNext():
         m = it.getNext()
         table.append(m.id)
         itt = m.iterator()
@@ -94,7 +131,7 @@ def createTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
     end = perf_counter()
     if not mute:
         varsizecheck(data, indices, indptr, M, V)
-        print("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
+        logging.info("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
     return M, V, table
 
 
@@ -104,28 +141,35 @@ def createQueryVect(wordsbag, sentence, mute = True):
     """
     start = perf_counter()
     indices = [k[-1] for k in wordsbag.getIds(sentence)]
+    if len(indices) == 0:
+        return None
     data = [1]*len(indices)
     indptr = [0, len(indices)]
     Q = scs.csc_matrix((data, indices, indptr), dtype = int)
     end = perf_counter()
     if not mute:
-        print("createQueryVect - Temps pris : "+str(end-start)+"s")
+        logging.info("createQueryVect - Temps pris : "+str(end-start)+"s")
     return Q
+
 
 def cosNorm(Q, C):
     """
     CSC * CSC -> float
     """
-    return max(Q.multiply(C).sum()/np.sqrt(Q.multiply(Q).sum()*C.multiply(C).sum()),1e-10)
+    return Q.multiply(C).sum()/np.sqrt(Q.multiply(Q).sum()*C.multiply(C).sum())
+
 
 def getMostRelevantDoc(M, V, Q, mute = True):
     """
     CSC * CSC * CSC -> int * float
     """
+    if Q is None:
+        logging.info("Requête rejetée")
+        return None, 0
     ql = Q.shape[0]
     m, n = M.shape
     maxsco = 0.0
-    imax = 0
+    imax = None
     i = 0
     start = perf_counter()
     if ql < m:
@@ -140,8 +184,9 @@ def getMostRelevantDoc(M, V, Q, mute = True):
         i += 1
     end = perf_counter()
     if not mute:
-        print("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
+        logging.info("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
     return imax, maxsco
+
 
 def testW():
     A  = np.array([1, 2, 3, 9, 1, 4])
@@ -178,7 +223,8 @@ def main(args = None):
     print(Q.toarray())
 
 if __name__ == '__main__':
-    main()
+    #main()
+    pass
 
 ####################################################
 #--------------------DEPRECATED--------------------#
@@ -308,6 +354,65 @@ def DEPRECATEDcreateTFMatrixV2(path = ".", mute = True):
         varsizecheck(data, indices, indptr, M, V)
         print("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
     return M, V
+
+def DEPRECATEDcreateTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True):
+    """
+    DEPRECATED
+    int * bool -> CSC | None
+    Retourne la matrice termes-documents TF dont
+    les coefficients sont les fréquences de chaque mot
+    dans les documents
+    """
+    def varsizecheck(data, indices, indptr, M, V):
+        print("createMatrixV2 - Tailles des var intermédiaires")
+        print("sizeof(data) : "+str(sys.getsizeof(data)))
+        print("sizeof(indices) : "+str(sys.getsizeof(indices)))
+        print("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
+        print("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
+        print("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+
+    #lst_dwc = glob.glob(path+freqFormat)
+    data = []
+    indices = []
+    indptr = [0]
+    table = array.array('i')
+    headIndex = 0
+    tailIndex = 0
+    i = 0
+    subTotal = 0
+    start = perf_counter()
+    F = SWF.Frequency(None, None, pathref)
+    it = F.iterator2()
+    while i < N and it.hasNext():
+        m = it.getNext()
+        table.append(m.id)
+        itt = m.iterator()
+        subTotal = 0
+        while itt.hasNext():
+            wid,wct = itt.getNext()
+            data.append(wct)
+            indices.append(wid)
+            subTotal += wct
+            tailIndex += 1
+        indptr.append(tailIndex-headIndex+indptr[-1])
+        while headIndex < tailIndex:
+            data[headIndex] = float(data[headIndex])/subTotal
+            headIndex += 1
+        headIndex += 1
+        i += 1
+    M = scs.csc_matrix((data, indices, indptr), dtype = float)
+    m,n = M.shape
+    i = 0
+    V = array.array('f')
+    while i < m:
+        V.append(np.log(n/max(0.001, M.getrow(i).count_nonzero())))
+        i += 1
+    V = scs.csc_matrix((V, range(len(V)), [0, len(V)]), dtype = float)
+    end = perf_counter()
+    if not mute:
+        varsizecheck(data, indices, indptr, M, V)
+        print("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
+    return M, V, table
 
 def DEPRECATEDconvertToTFIDF(M):
     """
