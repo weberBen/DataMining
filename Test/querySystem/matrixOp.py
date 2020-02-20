@@ -69,25 +69,27 @@ class Request:
         else:
             self._load(filename)
     
-    def search(self, txt):
+    def search(self, txt, nbRes = 1):
         
         if self._matrix is None or self._idf is None or self._table is None:
             logging.error("elements for search has not been initialized")
             return None
         
         Q = createQueryVect(self._wordsBag, txt)
-        imax, maxsco = getMostRelevantDoc(self._matrix, self._idf, Q)
-        if imax is not None:
-            movie = self._database.getMovie(self._table[imax])
-            logging.debug("Score max : "+str(maxsco)+"\nMovieID : "+str(self._table[imax]))
-            logging.debug("Titre du film :"+movie.title)
-            return movie
+        lst_sco = getMostRelevantDocs(self._matrix, self._idf, Q, nbRes)
+        lst_sco = [e for e in lst_sco if e[0] is not None]
+        if lst_sco is not []:
+            for l in lst_sco:
+                movie = self._database.getMovie(self._table[l[0]])
+                #logging.debug("Vecteur query :\n"+str(Q))
+                #logging.debug("Colonne du film :\n"+str(self._matrix[:,imax]))
+                #logging.debug("Socres IDF :\n"+str(self._idf))
+                logging.debug("Score max : "+str(l[-1])+"\nMovieID : "+str(self._table[l[0]]))
+                logging.debug("Titre du film :"+movie.title+"\n")
+            return lst_sco
         else:
             logging.debug("Rien trouvé")
             return None
-    
-    
-
 
 
 #%%
@@ -206,33 +208,39 @@ def cosNorm(Q, C):
     return Q.multiply(C).sum()/np.sqrt(Q.multiply(Q).sum()*C.multiply(C).sum())
 
 
-def getMostRelevantDoc(M, V, Q, mute = True):
+def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
     """
-    CSC * CSC * CSC -> int * float
+    CSC * CSC * CSC -> list[int*float]
     """
     if Q is None:
         logging.info("Requête rejetée")
         return None, 0
     ql = Q.shape[0]
     m, n = M.shape
-    maxsco = 0.0
-    imax = None
-    i = 0
+    lst_top = [(None,0.0)]*nbRes
+    #lst_imax = [None]*nbRes
     start = perf_counter()
     if ql < m:
         Q.resize(V.shape)
     else:
         Q = Q[:m]
+    i = 0
     while i < n:
         scoi = cosNorm(Q, M[:,i].multiply(V))
-        if maxsco < scoi:
-            maxsco = scoi
-            imax = i
+        lst_sco = [e[-1] for e in lst_top]
+        minil = min(lst_sco)
+        if scoi > minil:
+            try:
+                lst_top[lst_sco.index(minil)] = (i,scoi)
+            except ValueError:
+                print("ValueError")
+                print("minil = "+str(minil))
+                print("lst_top = "+str(lst_top))
         i += 1
     end = perf_counter()
     if not mute:
-        logging.debug("getMostRelevantDoc - Temps pris : "+str(end-start)+"s")
-    return imax, maxsco
+        logging.debug("getMostRelevantDocs - Temps pris : "+str(end-start)+"s")
+    return sorted(lst_top, key = lambda x:x[-1], reverse = True)
 
 
 def testW():
