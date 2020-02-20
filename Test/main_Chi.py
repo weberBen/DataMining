@@ -20,6 +20,22 @@ wordsBag = env_obj.WordsBag
 Freq = env_obj.Frequency
 
 if __name__ == "__main__":
+    #N = int(input("Nombre de documents : "))
+    N = 10
+    nbRes = int(input("Nombre de résultats : "))
+    matrix = "matrix_"+"all"
+    r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
+    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
+    r.load(matrix)
+    while True:
+        raw = input("Recherche : ")
+        if raw == "quit":
+            break
+        print("")
+        movie = r.search(raw, nbRes)
+        #if movie is not []:
+        #    print(movie.title)
+        
     '''
     N = int(input("Nombre de documents : "))
     print("Création de la matrice termes-documents sur les "+str(N)+" premiers films")
@@ -41,20 +57,4 @@ if __name__ == "__main__":
         else:
             print("Rien trouvé")
     '''
-    
-    #N = int(input("Nombre de documents : "))
-    N = 10
-    matrix = "matrix_"+"all"
-    r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
-    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
-    r.load(matrix)
-    while True:
-        raw = input("Recherche : ")
-        if raw=="quit":
-            break
-        movie = r.search(raw)
-        if movie is not None:
-            print(movie.title)
-        
-
 #%%
