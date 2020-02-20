@@ -265,7 +265,7 @@ def main(args = None):
     #print(os.getcwd())
     print("Création de la matrice termes-documents")
     N = int(input("Nombre de films à inclure : "))
-    A, V, table = createTFMatrixV3(N, "../MoviesFrequence.txt", mute = False)
+    A, V, table = createTFMatrixV4(N, "../MoviesFrequence.txt", mute = False)
     print(A.toarray())
     print("Taille matrix complete : "+str(sys.getsizeof(A.toarray()))+" bytes")
     print(A.shape)
@@ -295,6 +295,7 @@ def DEPRECATEDcreateTFMatrixV1(path = "."):
     """
     print("Fonction obsolète, veuillez utiliser createMatrixV2")
     exit()
+    freqFormat = "_freq.txt"
     lst_dwc = glob.glob(path+freqFormat)
     data = []
     indices = []
