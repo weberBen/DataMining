@@ -61,13 +61,13 @@ def test():
     
     print("\n------------Tests words in dictionary------------")
     
-    word1 = "shoot on sight"
-    word3 = "Shooter"
+    word1 = "Frodo"
+    word3 = "Gandalf"
     word4 = "geronima"
     
     
-    print("1:", (wordsBag.getId(word1) is not None))
-    print("3:", (wordsBag.getId(word3) is not None))
+    print("1:", (wordsBag.getId(word1) is not None),str(wordsBag.getId(word1)))
+    print("3:", (wordsBag.getId(word3) is not None),str(wordsBag.getId(word3)))
     print("4:", (wordsBag.getId(word4) is not None))
 
 #%%

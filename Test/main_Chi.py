@@ -10,7 +10,7 @@ from querySystem.matrixOp import *
 
 info = Env.Info()
 '''
-wordsBagInfo = Env.WordsBagInfo(ignore=True)
+wordsBagInfo = Env.WordsBagInfo(ignore=True) 
 info = Env.Info(wordsBagInfo=wordsBagInfo)
 '''
 
@@ -23,9 +23,9 @@ if __name__ == "__main__":
     #N = int(input("Nombre de documents : "))
     N = 10
     nbRes = int(input("Nombre de résultats : "))
-    matrix = "matrix_"+"all"
+    matrix = "matrix_"+"all"+"_but_for_real"
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
-    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
+    #r.create(matrix, erease=True, number_movies=None, count_item=1000)
     r.load(matrix)
     while True:
         raw = input("Recherche : ")

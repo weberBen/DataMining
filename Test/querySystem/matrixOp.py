@@ -19,6 +19,7 @@ import logging
 import pickle
 import uuid
 import datetime
+from tqdm import tqdm, tnrange
         
 #%%
 
@@ -114,6 +115,7 @@ def addDocumentToMatrix(M, V, mat):
     pass
 
 
+
 def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     """
     int * bool -> CSC | None
@@ -170,11 +172,12 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     logging.info("creation of the matrix")
     M = scs.csc_matrix((data, indices, indptr), dtype = float)
     m,n = M.shape
+    print("la matrice est de taille :",n,m)
     i = 0
     V = array.array('f')
-    while i < m:
+    for i in tqdm(range(m)):
         V.append(np.log(n/max(0.001, M.getrow(i).count_nonzero())))
-        i += 1
+        
     logging.info("creation of the vector")
     V = scs.csc_matrix((V, range(len(V)), [0, len(V)]), dtype = float)
     end = perf_counter()
@@ -225,7 +228,8 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
     else:
         Q = Q[:m]
     i = 0
-    while i < n:
+    #while i < n:
+    for i in tqdm(range(n),desc='recherche en cours'):
         scoi = cosNorm(Q, M[:,i].multiply(V))
         lst_sco = [e[-1] for e in lst_top]
         minil = min(lst_sco)
