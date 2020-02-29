@@ -205,7 +205,7 @@ def cosNorm(Q, C):
     """
     CSC * CSC -> float
     """
-    return Q.multiply(C).sum()/np.sqrt(Q.multiply(Q).sum()*C.multiply(C).sum())
+    return Q.multiply(C).sum()/(scs.linalg.norm(Q)*scs.linalg.norm(C))
 
 
 def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
