@@ -20,6 +20,7 @@ import pickle
 import uuid
 import datetime
 from tqdm import tqdm, tnrange
+from decimal import *
         
 #%%
 
@@ -111,11 +112,6 @@ class TDMvm:
 #--------------------FUNCTIONS--------------------#
 ###################################################
 
-def addDocumentToMatrix(M, V, mat):
-    pass
-
-
-
 def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     """
     int * bool -> CSC | None
@@ -144,12 +140,12 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     F = Freq
     it = F.iterator2()
     cpt = 1
-    
+    getcontext().prec = 16
     while (N is None or i < N) and it.hasNext():
         m = it.getNext()
         
         if cpt%count_item==0:
-            logging.info("{0} items has been browse since the begining ({1})".format(cpt, datetime.datetime.now()))
+            logging.info("{0} éléments ont été parcourus depuis le début ({1})".format(cpt, datetime.datetime.now()))
             
         cpt+=1
         
@@ -164,19 +160,22 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
             tailIndex += 1
         indptr.append(tailIndex-headIndex+indptr[-1])
         while headIndex < tailIndex:
-            data[headIndex] = float(data[headIndex])/subTotal
+            data[headIndex] = float(Decimal(data[headIndex]/subTotal))
             headIndex += 1
         headIndex += 1
         i += 1
-    
+
     logging.info("creation of the matrix")
     M = scs.csc_matrix((data, indices, indptr), dtype = float)
     m,n = M.shape
+    for i in range(n):
+        if M[:,i].count_nonzero() == 0:
+            del table[i]
+    M.eliminate_zeros()
     print("la matrice est de taille :",n,m)
-    i = 0
     V = array.array('f')
     for i in tqdm(range(m)):
-        V.append(np.log(n/max(0.001, M.getrow(i).count_nonzero())))
+        V.append(np.log(n/M.getrow(i).count_nonzero()))
         
     logging.info("creation of the vector")
     V = scs.csc_matrix((V, range(len(V)), [0, len(V)]), dtype = float)
@@ -186,13 +185,23 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
         logging.debug("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
     return M, V, table
 
+def checkmatrix(M):
+    for i in range(M.shape[-1]):
+        if M[:,i].count_nonzero() == 0:
+            print("WTF")
+            print(M[:,i])
+            print("i = "+str(i))
+    print("OK")
+    return True
 
 def createQueryVect(wordsbag, sentence, mute = True):
     """
     string * bool -> CSC | None
     """
     start = perf_counter()
-    indices = [k[-1] for k in wordsbag.getIds(sentence)]
+    tmp = wordsbag.getIds(sentence)
+    indices = [k[-1] for k in tmp]
+    logging.debug(tmp)
     if len(indices) == 0:
         return None
     data = [1]*len(indices)
@@ -233,14 +242,14 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
         scoi = cosNorm(Q, M[:,i].multiply(V))
         lst_sco = [e[-1] for e in lst_top]
         minil = min(lst_sco)
-        if scoi > minil:
+        if scoi is not None and scoi > minil:
             try:
                 lst_top[lst_sco.index(minil)] = (i,scoi)
             except ValueError:
                 print("ValueError")
                 print("minil = "+str(minil))
                 print("lst_top = "+str(lst_top))
-        i += 1
+        #i += 1
     end = perf_counter()
     if not mute:
         logging.debug("getMostRelevantDocs - Temps pris : "+str(end-start)+"s")
