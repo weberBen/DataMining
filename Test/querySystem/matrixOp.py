@@ -120,7 +120,7 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     dans les documents
     """
     def varsizecheck(data, indices, indptr, M, V):
-        logging.debug("createMatrixV2 - Tailles des var intermédiaires")
+        logging.debug("createMatrixV4 - Tailles des var intermédiaires")
         logging.debug("sizeof(data) : "+str(sys.getsizeof(data)))
         logging.debug("sizeof(indices) : "+str(sys.getsizeof(indices)))
         logging.debug("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
@@ -158,7 +158,7 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
             indices.append(wid)
             subTotal += wct
             tailIndex += 1
-        indptr.append(tailIndex-headIndex+indptr[-1])
+        indptr.append(tailIndex-headIndex+1+indptr[-1])
         while headIndex < tailIndex:
             data[headIndex] = float(Decimal(data[headIndex]/subTotal))
             headIndex += 1
@@ -182,7 +182,78 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
     end = perf_counter()
     if not mute:
         varsizecheck(data, indices, indptr, M, V)
-        logging.debug("createTFMatrixV2 - Temps pris : "+str(end-start)+"s")
+        logging.debug("createTFMatrixV4 - Temps pris : "+str(end-start)+"s")
+    return M, V, table
+
+def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
+    """
+    int * bool -> CSC | None
+    Retourne la matrice termes-documents TF dont
+    les coefficients sont les fréquences de chaque mot
+    dans les documents
+    """
+    def varsizecheck(data, row, col, M, V):
+        logging.debug("createMatrixV4 - Tailles des var intermédiaires")
+        logging.debug("sizeof(data) : "+str(sys.getsizeof(data)))
+        logging.debug("sizeof(row) : "+str(sys.getsizeof(row)))
+        logging.debug("sizeof(col) : "+str(sys.getsizeof(col)))
+        logging.debug("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.row.nbytes+M.col.nbytes)+" bytes")
+        logging.debug("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+
+    #lst_dwc = glob.glob(path+freqFormat)
+    data = []
+    row = []
+    col = []
+    table = array.array('i')
+    i = 0
+    headIndex = 0
+    tailIndex = 0
+    subTotal = 0
+    start = perf_counter()
+    F = Freq
+    it = F.iterator2()
+    cpt = 1
+    getcontext().prec = 16
+    while (N is None or i < N) and it.hasNext():
+        m = it.getNext()
+        
+        if cpt%count_item==0:
+            logging.info("{0} éléments ont été parcourus depuis le début ({1})".format(cpt, datetime.datetime.now()))
+            
+        cpt+=1
+        table.append(m.id)
+        itt = m.iterator()
+        subTotal = 0
+        while itt.hasNext():
+            wid,wct = itt.getNext()
+            data.append(wct)
+            row.append(wid)
+            col.append(i)
+            subTotal += wct
+        while headIndex < tailIndex:
+            data[headIndex] = float(data[headIndex])/subTotal
+            headIndex += 1
+        headIndex += 1
+        i += 1
+
+    logging.info("creation of the matrix")
+    M = scs.coo_matrix((data, (row, col)), dtype = float)
+    m,n = M.shape
+    for i in range(n):
+        if M[:,i].count_nonzero() == 0:
+            del table[i]
+    M.eliminate_zeros()
+    print("la matrice est de taille :",n,m)
+    V = array.array('f')
+    for i in tqdm(range(m)):
+        V.append(np.log(n/M.getrow(i).count_nonzero()))
+        
+    logging.info("creation of the vector")
+    V = scs.coo_matrix((V, (range(len(V)), [0]*len(V))), dtype = float)
+    end = perf_counter()
+    if not mute:
+        varsizecheck(data, row, col, M, V)
+        logging.debug("createTFMatrixV4 - Temps pris : "+str(end-start)+"s")
     return M, V, table
 
 def checkmatrix(M):
