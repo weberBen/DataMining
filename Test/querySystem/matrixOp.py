@@ -158,7 +158,7 @@ def createTFMatrixV4(N, Freq, count_item = 100, mute = True):
             indices.append(wid)
             subTotal += wct
             tailIndex += 1
-        indptr.append(tailIndex-headIndex+1+indptr[-1])
+        indptr.append(tailIndex-headIndex+(i==0)+indptr[-1])
         while headIndex < tailIndex:
             data[headIndex] = float(Decimal(data[headIndex]/subTotal))
             headIndex += 1
