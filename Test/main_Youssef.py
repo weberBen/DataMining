@@ -6,6 +6,7 @@
 import environment as Env
 import sys, os
 import Frequency.SummaryWordFrequency as Freq
+from nltk.stem.porter import *
 
 info = Env.Info()
 '''
@@ -16,8 +17,9 @@ info = Env.Info(wordsBagInfo=wordsBagInfo)
 env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag'''
-F=Freq.Frequency(None,None, "MoviesFrequence.txt")
+#F=Freq.Frequency(None,None, "MoviesFrequence.txt")
 
+"""
 it = F.iterator2()
 cpt = 0
 while it.hasNext():
@@ -34,6 +36,8 @@ while it.hasNext():
     
     if cpt==3:
         break
+    
+"""    
 #print(F._filename)
 #F.computeFrequency()
 
@@ -47,5 +51,6 @@ while cpt<4:
     print(test)
     cpt+=1
 '''
-
+stemmer = PorterStemmer()
+print(stemmer.stem("Frodo Aragorn Gollum Gandalf "))
 #%%
