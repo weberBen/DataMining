@@ -87,7 +87,7 @@ class Request:
                 #logging.debug("Socres IDF :\n"+str(self._idf))
                 logging.debug("Score max : "+str(l[-1])+"\nMovieID : "+str(self._table[l[0]]))
                 logging.debug("Titre du film :"+movie.title+"\n")
-            return lst_sco
+            return movie
         else:
             logging.debug("Rien trouvé")
             return None
