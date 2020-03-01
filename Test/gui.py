@@ -152,7 +152,7 @@ class App:
     
     
     def _initGui(self):
-        self._root.geometry("1000x650") 
+        self._root.geometry("950x700") 
         self._root.title("Télémagouilleur")
         self._root.grid_rowconfigure(1, weight=1)
         self._root.grid_columnconfigure(0, weight=1)
@@ -214,6 +214,7 @@ class App:
         self._search_meta.grid_columnconfigure(0, weight=1)
         self._search_meta.grid_columnconfigure(1, weight=1)
         self._search_meta.grid_columnconfigure(2, weight=1)
+        self._search_meta.grid_columnconfigure(3, weight=1)
         
         column = 0
         row = 0
@@ -222,11 +223,11 @@ class App:
         label.grid(column=column, row=row, sticky = tk.W+tk.E)
         
         self._search_meta_query_txt = tk.Text(self._search_meta, height=5)
-        self._search_meta_query_txt.grid(column=column, row=row+1, columnspan=2, rowspan=1, sticky= tk.W+tk.E)
+        self._search_meta_query_txt.grid(column=column+1, row=row, columnspan=2, rowspan=1, sticky= tk.W+tk.E)
         self._search_meta_query_txt.config(state='disabled')
         
         wdg = self._search_meta_query_txt
-        column=column + wdg.grid_info()['columnspan']
+        column=wdg.grid_info()['column'] + wdg.grid_info()['columnspan']
         
         label = tk.Label(self._search_meta, text="Max number results")
         label.grid(column=column, row=row, sticky = tk.W+tk.E)
@@ -235,7 +236,7 @@ class App:
         self._search_meta_max_results.grid(column=column, row=row+1, sticky = tk.W+tk.E)
         
         wdg = self._search_meta_max_results
-        column=column + wdg.grid_info()['columnspan']
+        column=wdg.grid_info()['column'] + wdg.grid_info()['columnspan']
         
         
         label = tk.Label(self._search_meta, text="ceil score results")
@@ -249,11 +250,23 @@ class App:
         column = 0
         row=wdg.grid_info()['row'] + wdg.grid_info()['rowspan']
         
-        label = tk.Label(self._search_meta, text="Actual results number")
+        
+        label = tk.Label(self._search_meta, text="Filtered query")
         label.grid(column=column, row=row, sticky = tk.W+tk.E)
         
+        self._search_meta_filtered_query_txt = tk.Text(self._search_meta, height=5)
+        self._search_meta_filtered_query_txt.grid(column=column+1, row=row, columnspan=2, rowspan=1, sticky= tk.W+tk.E)
+        self._search_meta_filtered_query_txt.config(state='disabled')
+        
+        
+        wdg = self._search_meta_filtered_query_txt
+        row=wdg.grid_info()['row'] + wdg.grid_info()['rowspan']
+        
+        label = tk.Label(self._search_meta, text="Actual results number")
+        label.grid(column=0, row=row, sticky = tk.W+tk.E)
+        
         self._search_meta_actual_results_number = tk.Label(self._search_meta, text="")
-        self._search_meta_actual_results_number.grid(column=column+1, row=row, sticky = tk.W+tk.E)
+        self._search_meta_actual_results_number.grid(column=1, row=row, sticky = tk.W+tk.E)
         #%%
         wdg = self._search_meta
         row = wdg.grid_info()['row'] + wdg.grid_info()['rowspan']
@@ -352,6 +365,7 @@ class App:
     
     def _clearMetaSearch(self):
         self._updateText(self._search_meta_query_txt, "")
+        self._updateText(self._search_meta_filtered_query_txt, "")
         self._search_meta_max_results.config(text="")
         self._search_meta_ceil_results.config(text="")
         self._search_meta_actual_results_number.config(text="0")
@@ -403,8 +417,8 @@ class App:
             self._results_query[item] = (movie.id, sco)
             self._result_listbox.insert('end', item)
         
-        print("res=", response.filteredQuery)
-        self._search_meta_query_txt.insert(tk.END, "\n\nFiltered query :\n"+str(response.filteredQuery))
+        print("res=", str(response.filteredQuery))
+        self._updateText(self._search_meta_filtered_query_txt, str(response.filteredQuery))
         self._result_listbox.focus()
     
     def _startSearch(self, parms):
