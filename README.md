@@ -7,6 +7,7 @@ Les modules suivants doivent être installés au préalable :
 * anytree
 * nltk
 * num2words
+* tqdm
 
 Puis exécuter les commandes ci-dessous dans la console (ou terminal, intepréteur de commandes..) :
  ```python
