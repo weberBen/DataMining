@@ -58,10 +58,10 @@ class ImageLabel(tk.Label):
 
 #%%
 class SearchParms:
-    def __init__(self, query, max_number, ceil):
+    def __init__(self, query, max_number, threshold):
         self.queryTxt = query
         self.MaxNumberResults = max_number
-        self.CeilResults = ceil
+        self.thresholdResults = threshold
 #%%
 def thread_initVar(self_class, end_function):
     error = False
@@ -90,7 +90,7 @@ def thread_search(self_class, parms, update_function, end_function):
     msg = None
     
     try :
-        response = self_class._request.search(parms.queryTxt, parms.MaxNumberResults)
+        response = self_class._request.search(parms.queryTxt, parms.MaxNumberResults, parms.thresholdResults)
         update_function(response)
     except Exception as e:
         error = True
@@ -197,12 +197,12 @@ class App:
         self._search_nb_results.bind('<Control-a>', self._selctAll)
         
         column = column + self._search_nb_results.grid_info()['columnspan']
-        label = tk.Label(self._search_group, text="ceil")
+        label = tk.Label(self._search_group, text="Threshold")
         label.grid(column=column , row=row , rowspan=rowspan, columnspan = columnspan)
         
-        self._search_ceil_result = tk.Entry(self._search_group, validate = 'key', validatecommand = self._vcmd)
-        self._search_ceil_result.grid(column=column , row=row+1, rowspan=rowspan, columnspan = columnspan)
-        self._search_ceil_result.bind('<Control-a>', self._selctAll)
+        self._search_threshold_result = tk.Entry(self._search_group, validate = 'key', validatecommand = self._vcmd)
+        self._search_threshold_result.grid(column=column , row=row+1, rowspan=rowspan, columnspan = columnspan)
+        self._search_threshold_result.bind('<Control-a>', self._selctAll)
         #%%
         wdg = self._search_group
         row = wdg.grid_info()['row'] + wdg.grid_info()['rowspan']
@@ -239,11 +239,11 @@ class App:
         column=wdg.grid_info()['column'] + wdg.grid_info()['columnspan']
         
         
-        label = tk.Label(self._search_meta, text="ceil score results")
+        label = tk.Label(self._search_meta, text="Threshold score results")
         label.grid(column=column, row=row, sticky = tk.W+tk.E)
         
-        self._search_meta_ceil_results = tk.Label(self._search_meta, text="")
-        self._search_meta_ceil_results.grid(column=column, row=row+1, sticky = tk.W+tk.E)
+        self._search_meta_threshold_results = tk.Label(self._search_meta, text="")
+        self._search_meta_threshold_results.grid(column=column, row=row+1, sticky = tk.W+tk.E)
         
         
         wdg = self._search_meta_query_txt
@@ -367,7 +367,7 @@ class App:
         self._updateText(self._search_meta_query_txt, "")
         self._updateText(self._search_meta_filtered_query_txt, "")
         self._search_meta_max_results.config(text="")
-        self._search_meta_ceil_results.config(text="")
+        self._search_meta_threshold_results.config(text="")
         self._search_meta_actual_results_number.config(text="0")
     
     def _clearResults(self, meta=False):
@@ -380,7 +380,7 @@ class App:
     
     def _getSearchParms(self):
         nbr = self._search_nb_results.get()
-        ceil = self._search_ceil_result.get()
+        threshold = self._search_threshold_result.get()
         query = self._search_box.get()
         
         try:
@@ -393,7 +393,7 @@ class App:
             
         
         try:
-            ceil = float(ceil)
+            threshold = float(threshold)
             pass
         except ValueError:
             return None
@@ -401,7 +401,7 @@ class App:
         if query is None or len(query)==0:
             query = None
         
-        return SearchParms(query, nbr, ceil)
+        return SearchParms(query, nbr, threshold)
     
     def _updateSearch(self, response):
         self._clearResults(meta=False)
@@ -435,7 +435,7 @@ class App:
         parms = self._getSearchParms()
         if parms is None:
             logging.debug("Invalid parms given in GUI")
-            messagebox.showerror("Error", "Invalid parms (number results and/or score ceil) given")
+            messagebox.showerror("Error", "Invalid parms (number results and/or score threshold) given")
             return None
         
         if parms.queryTxt is None :
@@ -443,10 +443,10 @@ class App:
             return None
         
         search_txt = parms.queryTxt
-        self._search_box.delete(0, 'end')
+        #self._search_box.delete(0, 'end')
         self._updateText(self._search_meta_query_txt, search_txt)
         self._search_meta_max_results.config(text=self._search_nb_results.get())
-        self._search_meta_ceil_results.config(text=self._search_ceil_result.get())
+        self._search_meta_threshold_results.config(text=self._search_threshold_result.get())
         
         self._startSearch(parms)
         

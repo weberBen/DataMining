@@ -30,7 +30,7 @@ class Response:
         self.dataset = None
         self.results = None
         self.nbRes = None
-        self.ceil = None
+        self.threshold = None
 
 
 #%%
@@ -83,20 +83,20 @@ class Request:
         else:
             self._load(filename)
     
-    def search(self, txt, nbRes = 1, ceil = 0):
+    def search(self, txt, max_nbRes = 1, threshold = 0):
         
         if self._matrix is None or self._idf is None or self._table is None:
             logging.error("elements for search has not been initialized")
             return None
         
         response = Response()
-        response.nbRes = nbRes
+        response.nbRes = max_nbRes
         response.userQuery = txt
-        response.ceil = ceil
+        response.threshold = threshold
         response.dataset = self._dataFilename
         
         Q = createQueryVect(self._wordsBag, txt, response=response)
-        res = getMostRelevantDocs(self._matrix, self._idf, Q, nbRes)
+        res = getMostRelevantDocs(self._matrix, self._idf, Q, max_nbRes, threshold)
         output = []
         for e in res:
             if e[0] is None:
@@ -215,7 +215,7 @@ def cosNorm(Q, C):
     return Q.multiply(C).sum()/(scs.linalg.norm(Q)*scs.linalg.norm(C))
 
 
-def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
+def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold=0, mute = True):
     """
     CSC * CSC * CSC -> list[int*float]
     """
@@ -224,7 +224,7 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
         return [(None, 0)]
     ql = Q.shape[0]
     m, n = M.shape
-    lst_top = [(None,0.0)]*nbRes
+    lst_top = [(None,0.0)]*max_nbRes
     #lst_imax = [None]*nbRes
     start = perf_counter()
     if ql < m:
@@ -244,11 +244,25 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
                 logging.debug("ValueError")
                 logging.debug("minil = "+str(minil))
                 logging.debug("lst_top = "+str(lst_top))
-        #i += 1
+        #i += 1 
     end = perf_counter()
     if not mute:
         logging.debug("getMostRelevantDocs - Temps pris : "+str(end-start)+"s")
-    return sorted(lst_top, key = lambda x:x[-1], reverse = True)
+        
+    lst_top = sorted(lst_top, key = lambda x:x[-1], reverse = True)
+    
+    output = []
+    for e in lst_top:
+        scoi = e[-1]
+        
+        if len(output)>max_nbRes:
+            break
+        
+        if scoi > threshold :
+            if e[0] is not None:
+                output.append(e)
+    
+    return output
 
 
 def testW():
