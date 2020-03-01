@@ -44,14 +44,18 @@ class MovieHandler:
     def __init__(self, filename):
         self._tableName = "Movie"
         
+        self._dbFilename = filename
         self._conn = sqlite3.connect(filename)
         
-        if not self._tableExists(self._tableName):
-            self._createDb()
+        if not self._tableExists(self._conn, self._tableName):
+            self._createDb(self._conn)
     
-    def _tableExists(self, table_name):
-        cursor = self._conn.cursor()
-        cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}'".format(self._tableName))
+    def useInThread(self):
+        return MovieHandler(self._dbFilename)
+    
+    def _tableExists(self, conn, table_name):
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(name) FROM sqlite_master WHERE type='table' AND name='{0}'".format(table_name))
 
         #if the count is 1, then table exists
         if cursor.fetchone()[0]==1 : 
@@ -64,10 +68,10 @@ class MovieHandler:
         cursor.execute("DELETE FROM "+self._tableName)
         self._conn.commit()
     
-    def _createDb(self):
-        cursor = self._conn.cursor()
+    def _createDb(self, conn):
+        cursor = conn.cursor()
         cursor.execute("CREATE TABLE "+self._tableName+" (id integer, title text, releaseDate text, lenght text, genre text, summary blob)")
-        self._conn.commit()
+        conn.commit()
     
         
     def _addWithoutCommit(self, movieData):
@@ -183,9 +187,12 @@ class Database:
             logging.warning("archive de la base de données introuvabale")
             sys.exit()
         
+        self._moviesDataFilename = movies_data_filename
         self._movieHandler = MovieHandler(movies_data_filename)
         logging.info("database started")
     
+    def useInThread(self):
+        self._movieHandler = self._movieHandler.useInThread()
     
     def getMovie(self, index):
         '''
@@ -213,4 +220,3 @@ class Database:
 
 #%%
 
-        

@@ -16,6 +16,7 @@ from dataManagement.Dictionary import WordsBag
 import Frequency.SummaryWordFrequency as SWF
 
 _DATASET_FOLDER_NAME = "Dataset"
+_ASSETS_FOLDER_NAME = "Assets"
 
 
 #%%
@@ -49,8 +50,9 @@ class Info:
 #%%
         
 class EnvVar:
-    def __init__(self, root_directory, info = Info(), ignore_all = False):
-        self.rootDirectory = root_directory
+    def __init__(self, root_directory, assets_directory, info = Info(), ignore_all = False):
+        self.datasetDirectory = root_directory
+        self.assetsDirectory = assets_directory
         
         if not ignore_all:
             self.Database = self._getDatabase(info.databaseInfo)
@@ -59,14 +61,17 @@ class EnvVar:
         
     
     def getDatasetFolder(self):
-        return self.rootDirectory
+        return self.datasetDirectory
+    
+    def getAssetsDirectory(self):
+        return self.assetsDirectory
     
     def getMatrixFolder(self):
-        return os.path.join(self.rootDirectory, "matrix")
+        return os.path.join(self.datasetDirectory, "matrix")
     
     def _getDatabase(self, info=None):
         if info is None:
-            path = os.path.join(self.rootDirectory, "moviesData.db")
+            path = os.path.join(self.datasetDirectory, "moviesData.db")
         else:
             if info.ignore:
                 return None
@@ -75,7 +80,7 @@ class EnvVar:
     
     def _getWordsBag(self, info=None):
         if info is None:
-            path = os.path.join(self.rootDirectory, "dictionary.json")
+            path = os.path.join(self.datasetDirectory, "dictionary.json")
             erease = False
         else:
             if info.ignore:
@@ -89,7 +94,7 @@ class EnvVar:
         if info is None:
             database = self.Database
             wordsBag = self.WordsBag
-            filename = os.path.join(self.rootDirectory, "MoviesFrequence.txt")
+            filename = os.path.join(self.datasetDirectory, "MoviesFrequence.txt")
         else :
             if info.ignore:
                 return None
@@ -119,18 +124,29 @@ def getPathFolder(actual_path, folder_to_reach):
     
     return output
 
+def getPath(scirpt_path_execution, directory_name):
+    if type(scirpt_path_execution)==str:
+        path = getPathFolder(scirpt_path_execution, directory_name)
+    else:
+        for _path in scirpt_path_execution :
+            path = getPathFolder(_path, directory_name)
+            if path is not None:
+                break
+    return path
+
 def setupEnv(scirpt_path_execution, info = Info()):
     
-    if type(scirpt_path_execution)==str:
-        dataset_path = getPathFolder(scirpt_path_execution, _DATASET_FOLDER_NAME)
-    else:
-        for path in scirpt_path_execution :
-            dataset_path = getPathFolder(path, _DATASET_FOLDER_NAME)
-            if dataset_path is not None:
-                break
-    
+    dataset_path = getPath(scirpt_path_execution, _DATASET_FOLDER_NAME)
     if dataset_path is None:
-        logging.warning("Cannot find the desired path")
+        logging.error("Cannot find the dataset path")
         sys.exit()
     
-    return EnvVar(dataset_path, info)
+    assets_path = getPath(scirpt_path_execution, _ASSETS_FOLDER_NAME)
+    if assets_path is None:
+        logging.error("Cannot find the assets path")
+        sys.exit()
+    
+    return EnvVar(dataset_path, assets_path, info)
+
+#%%
+
