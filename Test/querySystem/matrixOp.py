@@ -23,6 +23,17 @@ from decimal import *
 #--------------------CLASS--------------------#
 ###############################################
 
+class Response:
+    def __init__(self):
+        self.userQuery = None
+        self.filteredQuery = None
+        self.dataset = None
+        self.results = None
+        self.nbRes = None
+        self.ceil = None
+
+
+#%%
 class Request:
     def __init__(self, database, wordsBag, Frequency, matrix_folder):
         
@@ -31,6 +42,7 @@ class Request:
         self._wordsBag = wordsBag
         self._Frequency = Frequency
         
+        self._dataFilename = None
         self._matrix = None
         self._idf = None
         self._table = None
@@ -60,6 +72,7 @@ class Request:
         with open(filename, "rb" ) as file:
             tmp = pickle.load(file)
         self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
+        self._dataFilename = filename
     
     def load(self, matrix_name):
         filename = os.path.join(self._rootDirectory, matrix_name)
@@ -70,13 +83,19 @@ class Request:
         else:
             self._load(filename)
     
-    def search(self, txt, nbRes = 1):
+    def search(self, txt, nbRes = 1, ceil = 0):
         
         if self._matrix is None or self._idf is None or self._table is None:
             logging.error("elements for search has not been initialized")
             return None
         
-        Q = createQueryVect(self._wordsBag, txt)
+        response = Response()
+        response.nbRes = nbRes
+        response.userQuery = txt
+        response.ceil = ceil
+        response.dataset = self._dataFilename
+        
+        Q = createQueryVect(self._wordsBag, txt, response=response)
         res = getMostRelevantDocs(self._matrix, self._idf, Q, nbRes)
         output = []
         for e in res:
@@ -88,7 +107,9 @@ class Request:
             
             logging.debug("Score : "+str(score)+"\nMovieID : "+str(movie_id))
         
-        return output
+        response.results = output
+        
+        return response
 
 
 ###################################################
@@ -164,7 +185,7 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
     return M, V, table
 
 
-def createQueryVect(wordsbag, sentence, mute = True):
+def createQueryVect(wordsbag, sentence, mute = True, response=None):
     """
     string * bool -> CSC | None
     """
@@ -180,6 +201,10 @@ def createQueryVect(wordsbag, sentence, mute = True):
     end = perf_counter()
     if not mute:
         logging.debug("createQueryVect - Temps pris : "+str(end-start)+"s")
+    
+    if response is not None:
+        response.filteredQuery = tmp
+    
     return Q
 
 

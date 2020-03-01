@@ -84,7 +84,8 @@ msg="number of movies to test (max : "+str(len(List_movie))+"): "
 nbr=int(input(msg))
 L=[]
 for k in range(nbr) :
-    res = r.search(List_search[k], 1)
+    response = r.search(List_search[k], 1)
+    res = response.results
     
     if len(res)!=1:
         print("no result")
