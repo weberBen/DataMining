@@ -77,20 +77,18 @@ class Request:
             return None
         
         Q = createQueryVect(self._wordsBag, txt)
-        lst_sco = getMostRelevantDocs(self._matrix, self._idf, Q, nbRes)
-        lst_sco = [e for e in lst_sco if e[0] is not None]
-        if lst_sco is not []:
-            for l in lst_sco:
-                movie = self._database.getMovie(self._table[l[0]])
-                #logging.debug("Vecteur query :\n"+str(Q))
-                #logging.debug("Colonne du film :\n"+str(self._matrix[:,imax]))
-                #logging.debug("Socres IDF :\n"+str(self._idf))
-                logging.debug("Score max : "+str(l[-1])+"\nMovieID : "+str(self._table[l[0]]))
-                logging.debug("Titre du film :"+movie.title+"\n")
-            return movie
-        else:
-            logging.debug("Rien trouvé")
-            return None
+        res = getMostRelevantDocs(self._matrix, self._idf, Q, nbRes)
+        output = []
+        for e in res:
+            if e[0] is None:
+                continue
+            movie_id = self._table[e[0]]
+            score = e[1]
+            output.append((movie_id, score))
+            
+            logging.debug("Score : "+str(score)+"\nMovieID : "+str(movie_id))
+        
+        return output
 
 
 ###################################################
@@ -218,9 +216,9 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
             try:
                 lst_top[lst_sco.index(minil)] = (i,scoi)
             except ValueError:
-                print("ValueError")
-                print("minil = "+str(minil))
-                print("lst_top = "+str(lst_top))
+                logging.debug("ValueError")
+                logging.debug("minil = "+str(minil))
+                logging.debug("lst_top = "+str(lst_top))
         #i += 1
     end = perf_counter()
     if not mute:

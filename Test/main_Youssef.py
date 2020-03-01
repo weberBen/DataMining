@@ -84,7 +84,14 @@ msg="number of movies to test (max : "+str(len(List_movie))+"): "
 nbr=int(input(msg))
 L=[]
 for k in range(nbr) :
-    movie = r.search(List_search[k], 1)
+    res = r.search(List_search[k], 1)
+    
+    if len(res)!=1:
+        print("no result")
+        continue
+    
+    movie_id, score  = res[0]
+    movie = database.getMovie(movie_id)
     
     if(movie.title==List_movie[k]):
         L.append(1)
