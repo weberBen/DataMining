@@ -90,8 +90,8 @@ def thread_search(self_class, parms, update_function, end_function):
     msg = None
     
     try :
-        res = self_class._request.search(parms.queryTxt, parms.MaxNumberResults)
-        update_function(res)
+        response = self_class._request.search(parms.queryTxt, parms.MaxNumberResults)
+        update_function(response)
     except Exception as e:
         error = True
         msg = e, format_exc()
@@ -389,10 +389,11 @@ class App:
         
         return SearchParms(query, nbr, ceil)
     
-    def _updateSearch(self, results):
+    def _updateSearch(self, response):
         self._clearResults(meta=False)
         #self._database.useInThread()
         
+        results = response.results
         self._search_meta_actual_results_number.config(text=str(len(results)))
         for res in results:
             movie_id, sco = res[0], res[1]
@@ -402,6 +403,8 @@ class App:
             self._results_query[item] = (movie.id, sco)
             self._result_listbox.insert('end', item)
         
+        print("res=", response.filteredQuery)
+        self._search_meta_query_txt.insert(tk.END, "\n\nFiltered query :\n"+str(response.filteredQuery))
         self._result_listbox.focus()
     
     def _startSearch(self, parms):
