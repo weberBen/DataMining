@@ -22,11 +22,11 @@ Freq = env_obj.Frequency
 if __name__ == "__main__":
     #N = int(input("Nombre de documents : "))
     N = 10
-    nbRes = int(input("Nombre de résultats : "))
-    matrix = "matrix_"+"all"+"_but_for_real"
+    matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
     #r.create(matrix, erease=True, number_movies=None, count_item=1000)
     r.load(matrix)
+    nbRes = int(input("Nombre de résultats : "))
     while True:
         raw = input("Recherche : ")
         if raw == "quit":
