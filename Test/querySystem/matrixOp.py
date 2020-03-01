@@ -105,12 +105,12 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
     dans les documents
     """
     def varsizecheck(data, row, col, M, V):
-        logging.debug("createMatrixV4 - Tailles des var intermédiaires")
+        logging.debug("createMatrixV5 - Tailles des var intermédiaires")
         logging.debug("sizeof(data) : "+str(sys.getsizeof(data)))
         logging.debug("sizeof(row) : "+str(sys.getsizeof(row)))
         logging.debug("sizeof(col) : "+str(sys.getsizeof(col)))
-        logging.debug("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.row.nbytes+M.col.nbytes)+" bytes")
-        logging.debug("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+        logging.debug("createTFMatrixV5 - Taille CSC : "+str(M.data.nbytes+M.row.nbytes+M.col.nbytes)+" bytes")
+        logging.debug("createTFMatrixV5 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
@@ -250,7 +250,7 @@ def main(args = None):
     #print(os.getcwd())
     print("Création de la matrice termes-documents")
     N = int(input("Nombre de films à inclure : "))
-    A, V, table = createTFMatrixV4(N, "../MoviesFrequence.txt", mute = False)
+    A, V, table = createTFMatrixV5(N, "../MoviesFrequence.txt", mute = False)
     print(A.toarray())
     print("Taille matrix complete : "+str(sys.getsizeof(A.toarray()))+" bytes")
     print(A.shape)
@@ -278,8 +278,9 @@ def _DEPRECATEDcreateTFMatrixV1(path = "."):
     les coefficients sont les fréquences de chaque mot
     dans les documents
     """
-    print("Fonction obsolète, veuillez utiliser createMatrixV2")
+    print("Fonction obsolète, veuillez utiliser createMatrixV5")
     exit()
+    
     freqFormat = "_freq.txt"
     lst_dwc = glob.glob(path+freqFormat)
     data = []
@@ -326,6 +327,9 @@ def _DEPRECATEDcreateTFMatrixV2(path = ".", mute = True):
     les coefficients sont les fréquences de chaque mot
     dans les documents
     """
+    print("Fonction obsolète, veuillez utiliser createMatrixV5")
+    exit()
+
     freqFormat = "/*_freq.txt"
     
     def varsizecheck(data, indices, indptr, M, V):
@@ -404,13 +408,16 @@ def _DEPRECATEDcreateTFMatrixV3(N, pathref = "MoviesFrequence.txt", mute = True)
     les coefficients sont les fréquences de chaque mot
     dans les documents
     """
+    print("Fonction obsolète, veuillez utiliser createMatrixV5")
+    exit()
+
     def varsizecheck(data, indices, indptr, M, V):
-        print("createMatrixV2 - Tailles des var intermédiaires")
+        print("createMatrixV3 - Tailles des var intermédiaires")
         print("sizeof(data) : "+str(sys.getsizeof(data)))
         print("sizeof(indices) : "+str(sys.getsizeof(indices)))
         print("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
-        print("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
-        print("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+        print("createTFMatrixV3 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
+        print("createTFMatrixV3 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
@@ -462,8 +469,9 @@ def _DEPRECATEDconvertToTFIDF(M):
     Convertit la matrice termes-documents TF en matrice
     TF-IDF
     """
-    print("Fonction obsolète, veuillez utiliser createMatrixV2")
+    print("Fonction obsolète, veuillez utiliser createMatrixV5")
     exit()
+
     m, n = M.shape
     for i in range(m):
         ni = max(np.sum(M[i]>0),0.001)
@@ -478,13 +486,16 @@ def _DEPRECATEDcreateTFMatrixV4(N, Freq, count_item = 100, mute = True):
     les coefficients sont les fréquences de chaque mot
     dans les documents
     """
+    print("Fonction obsolète, veuillez utiliser createMatrixV5")
+    exit()
+
     def varsizecheck(data, indices, indptr, M, V):
         logging.debug("createMatrixV4 - Tailles des var intermédiaires")
         logging.debug("sizeof(data) : "+str(sys.getsizeof(data)))
         logging.debug("sizeof(indices) : "+str(sys.getsizeof(indices)))
         logging.debug("sizeof(indptr) : "+str(sys.getsizeof(indptr)))
-        logging.debug("createTFMatrixV2 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
-        logging.debug("createTFMatrixV2 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
+        logging.debug("createTFMatrixV4 - Taille CSC : "+str(M.data.nbytes+M.indices.nbytes+M.indptr.nbytes)+" bytes")
+        logging.debug("createTFMatrixV4 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
     #lst_dwc = glob.glob(path+freqFormat)
     data = []
