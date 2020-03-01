@@ -340,9 +340,9 @@ class App:
         except ValueError:
             pass
         
-        self._database.useInThread() #thread safe
+        db = self._database.openNew()#thread safe
         
-        movie = self._database.getMovie(movie_id)
+        movie = db.getMovie(movie_id)
         
         self._movie_score_label.config(text=str(score))
         self._movie_id_label.config(text=movie.id)
@@ -405,14 +405,14 @@ class App:
     
     def _updateSearch(self, response):
         self._clearResults(meta=False)
-        #self._database.useInThread()
+        db = self._database.openNew()
         
         results = response.results
         self._search_meta_actual_results_number.config(text=str(len(results)))
         for res in results:
             movie_id, sco = res[0], res[1]
             
-            movie = self._database.getMovie(movie_id)
+            movie = db.getMovie(movie_id)
             item = str(movie.title)+" (score="+str(sco)+")"
             self._results_query[item] = (movie.id, sco)
             self._result_listbox.insert('end', item)

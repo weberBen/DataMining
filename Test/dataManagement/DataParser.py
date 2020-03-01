@@ -50,7 +50,7 @@ class MovieHandler:
         if not self._tableExists(self._conn, self._tableName):
             self._createDb(self._conn)
     
-    def useInThread(self):
+    def openNew(self):
         return MovieHandler(self._dbFilename)
     
     def _tableExists(self, conn, table_name):
@@ -173,7 +173,7 @@ class MovieHandler:
 #%%
 
 class Database:
-    def __init__(self, movies_data_filename):
+    def __init__(self, movies_data_filename, movie_handler=None):
         '''
         Création d'un object base de données
         
@@ -181,18 +181,20 @@ class Database:
             dossier_fiches_films (string) : chemin du dossier contenant les fiches des films au format json ({<wikiId> : ***, <titre> : ***, <dateSortie> : ***, <duree> : ***, <genre> : ***, <resume> : ***})
                 Les résumés sont supposés nettoyés
         '''
-        logging.info("starting database")
         
-        if movies_data_filename is None:
+        if movies_data_filename is None and movie_handler is None:
             logging.warning("archive de la base de données introuvabale")
             sys.exit()
         
-        self._moviesDataFilename = movies_data_filename
-        self._movieHandler = MovieHandler(movies_data_filename)
-        logging.info("database started")
+        if movie_handler is not None:
+            self._movieHandler = movie_handler
+        else:
+            logging.info("starting database")
+            self._movieHandler = MovieHandler(movies_data_filename)
+            logging.info("database started")
     
-    def useInThread(self):
-        self._movieHandler = self._movieHandler.useInThread()
+    def openNew(self):
+        return Database(movies_data_filename=None, movie_handler=self._movieHandler.openNew())
     
     def getMovie(self, index):
         '''
