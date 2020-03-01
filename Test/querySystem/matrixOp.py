@@ -196,7 +196,7 @@ def getMostRelevantDocs(M, V, Q, nbRes = 1, mute = True):
     """
     if Q is None:
         logging.info("Requête rejetée")
-        return None, 0
+        return [(None, 0)]
     ql = Q.shape[0]
     m, n = M.shape
     lst_top = [(None,0.0)]*nbRes

@@ -344,14 +344,25 @@ class App:
 
 
     #%% SEARCH BOX
+    def _clearMovieDatasheet(self):
+        self._movie_score_label.config(text="")
+        self._movie_id_label.config(text="")
+        self._movie_title_label.config(text="")
+        self._updateText(self._movie_summary ,"")
+    
+    def _clearMetaSearch(self):
+        self._updateText(self._search_meta_query_txt, "")
+        self._search_meta_max_results.config(text="")
+        self._search_meta_ceil_results.config(text="")
+        self._search_meta_actual_results_number.config(text="0")
+    
     def _clearResults(self, meta=False):
         self._result_listbox.delete(0, tk.END)
         self._results_query = {}
+        self._clearMovieDatasheet()
+        
         if meta:
-            self._updateText(self._search_meta_query_txt, "")
-            self._search_meta_max_results.config(text="")
-            self._search_meta_ceil_results.config(text="")
-            self._search_meta_actual_results_number.config(text="0")
+            self._clearMetaSearch()
     
     def _getSearchParms(self):
         nbr = self._search_nb_results.get()
