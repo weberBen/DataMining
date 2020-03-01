@@ -9,11 +9,9 @@ import environment as Env
 import sys, os
 import querySystem.matrixOp as query
 import threading
-import concurrent.futures
 import logging
 from tkinter import messagebox
 from traceback import format_exc
-import os
 
 #%%
 from PIL import Image, ImageTk
@@ -63,7 +61,7 @@ class SearchParms:
         self.MaxNumberResults = max_number
         self.thresholdResults = threshold
 #%%
-def thread_initVar(self_class, end_function):
+def thread_initVar(self_class, dataset, end_function):
     error = False
     msg = None
     
@@ -76,7 +74,7 @@ def thread_initVar(self_class, end_function):
         self_class._Freq = env_obj.Frequency
         
         request = query.Request(env_obj.Database, env_obj.WordsBag, env_obj.Frequency, env_obj.getMatrixFolder())
-        request.load("matrix_all")
+        request.load(dataset)
         self_class._request = request
         
     except Exception as e:
@@ -100,7 +98,7 @@ def thread_search(self_class, parms, update_function, end_function):
 
     
 class App:
-    def __init__(self):
+    def __init__(self, dataset):
         self._isLoading = False
         self._results_query = {}
         self._root = tk.Tk()
@@ -108,6 +106,7 @@ class App:
         self._loadDisplay = ImageLabel(self._root)
         self._assetsDirectory = Env.getPath([__file__, sys.argv[0], os.getcwd()], Env._ASSETS_FOLDER_NAME)
         self._filenameLoadingGif = os.path.join(self._assetsDirectory, "loading.gif")
+        self._dataset = dataset
         
         self._env_obj = None
         self._database = None
@@ -115,9 +114,9 @@ class App:
         self._Freq = None
         self._request = None
     
-    def _intiVar(self):
+    def _intiVar(self, dataset):
         self._loading()
-        thread = threading.Thread(target = thread_initVar, args = (self, self._stoploading))
+        thread = threading.Thread(target = thread_initVar, args = (self, dataset, self._stoploading))
         thread.start()
 
     def _loading(self):
@@ -417,7 +416,6 @@ class App:
             self._results_query[item] = (movie.id, sco)
             self._result_listbox.insert('end', item)
         
-        print("res=", str(response.filteredQuery))
         self._updateText(self._search_meta_filtered_query_txt, str(response.filteredQuery))
         self._result_listbox.focus()
     
@@ -458,12 +456,9 @@ class App:
         # move cursor to the end
     
     def run(self):
-        self._intiVar()
+        self._intiVar(self._dataset)
         self._root.bind_all('<Escape>', lambda a : self._search_box.focus())
         self._search_box.focus()
         self._root.mainloop()
 
 #%%
-
-app = App()
-app.run()
