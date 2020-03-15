@@ -19,9 +19,9 @@ import datetime
 from tqdm import tqdm, tnrange
 from decimal import *
         
-###############################################
-#--------------------CLASS--------------------#
-###############################################
+#################################################
+#--------------------CLASSES--------------------#
+#################################################
 
 class Response:
     def __init__(self):
@@ -33,7 +33,6 @@ class Response:
         self.threshold = None
 
 
-#%%
 class Request:
     def __init__(self, database, wordsBag, Frequency, matrix_folder):
         
@@ -46,6 +45,8 @@ class Request:
         self._matrix = None
         self._idf = None
         self._table = None
+
+        self._svd = None
         
     def _create(self, filename, number_movie, count_item):
         logging.info("creation of matrix under <<"+str(filename)+">>")
@@ -68,14 +69,19 @@ class Request:
         else :
             self._create(filename, number_movies, count_item)
     
-    def _load(self, filename):
+    
+    def _load(self, filename, rk = 6):
         logging.info("loading matrix from <<"+str(filename)+">>")
         with open(filename, "rb" ) as file:
             tmp = pickle.load(file)
         self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
+        tmpM = scs.diags(self._idf.data)*self._matrix
+        u, s, vt = scs.linalg.svds(tmpM, k = rk)
+        u, s, vt = scs.csc_matrix(u), scs.csc_matrix(s), scs.csc_matrix(vt)
+        self._svd = u, scs.diags(s.data)*vt 
         self._dataFilename = filename
     
-    def load(self, matrix_name):
+    def load(self, matrix_name, k = 6):
         filename = os.path.join(self._rootDirectory, matrix_name)
         
         if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -83,8 +89,9 @@ class Request:
             logging.error(msg)
             raise IOError(msg).with_traceback(sys.exc_info()[2])
         else:
-            self._load(filename)
+            self._load(filename, k)
     
+
     def search(self, txt, max_nbRes = 1, threshold = 0):
         
         if self._matrix is None or self._idf is None or self._table is None:
@@ -97,7 +104,7 @@ class Request:
         response.threshold = threshold
         response.dataset = self._dataFilename
         
-        Q = createQueryVect(self._wordsBag, txt, response=response)
+        Q = createQueryVect(self._wordsBag, txt, response = response)
         res = getMostRelevantDocs(self._matrix, self._idf, Q, max_nbRes, threshold)
         output = []
         for e in res:
@@ -113,10 +120,37 @@ class Request:
         
         return response
 
+    def searchSVD(self, txt, max_nbRes = 1, threshold = 0):
+        if self._svd is None or self._table is None:
+            logging.error("elements for search has not been initialized")
+            return None
+        
+        response = Response()
+        response.nbRes = max_nbRes
+        response.userQuery = txt
+        response.threshold = threshold
+        response.dataset = self._dataFilename
+        
+        Q = createQueryVect(self._wordsBag, txt, response = response)
+        res = getMostRelevantDocsSVD(self._svd, Q, max_nbRes, threshold)
+        output = []
+        for e in res:
+            if e[0] is None:
+                continue
+            movie_id = self._table[e[0]]
+            score = e[1]
+            output.append((movie_id, score))
+            
+            logging.debug("Score : "+str(score)+"\nMovieID : "+str(movie_id))
+        
+        response.results = output
+        
+        return response
 
-###################################################
-#--------------------FUNCTIONS--------------------#
-###################################################
+
+##################################################################
+#--------------------CREATION MATRICE/VECTEUR--------------------#
+##################################################################
 
 def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
     """
@@ -209,6 +243,9 @@ def createQueryVect(wordsbag, sentence, mute = True, response=None):
     
     return Q
 
+####################################################
+#--------------------NORMES COS--------------------#
+####################################################
 
 def cosNorm(Q, C):
     """
@@ -217,7 +254,17 @@ def cosNorm(Q, C):
     return Q.multiply(C).sum()/(scs.linalg.norm(Q)*scs.linalg.norm(C))
 
 
-def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold=0, mute = True):
+def cosNormSVD(Q, Uk, Hkj):
+    """
+    CSC * CSC * CSC -> float
+    """
+    return Uk.transpose().multiply(Q).multiply(Hkj).sum()/(scs.linalg.norm(Uk.transpose().multiply(Q))*scs.linalg.norm(Hkj))
+
+########################################################
+#--------------------SEARCH RESULTS--------------------#
+########################################################
+
+def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold = 0, mute = True):
     """
     CSC * CSC * CSC -> list[int*float]
     """
@@ -266,6 +313,59 @@ def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold=0, mute = True):
     
     return output
 
+def getMostRelevantDocsSVD(UHk, Q, max_nbRes = 1, threshold = 0, mute = True):
+    """
+    [CSC * CSC] * CSC -> list[int*float]
+    """
+    if Q is None:
+        logging.info("Requête rejetée")
+        return [(None, 0)]
+    ql = Q.shape[0]
+    uk, hk = UHk
+    m, n = uk.shape[0], hk.shape[-1]
+    lst_top = [(None,0.0)]*max_nbRes
+    #lst_imax = [None]*nbRes
+    start = perf_counter()
+    if ql < m:
+        Q.resize((m,1))
+    else:
+        Q = Q[:m]
+    i = 0
+    #while i < n:
+    for i in tqdm(range(n),desc='recherche en cours'):
+        scoi = cosNormSVD(Q, uk, hk[:i])
+        lst_sco = [e[-1] for e in lst_top]
+        minil = min(lst_sco)
+        if scoi is not None and scoi > minil:
+            try:
+                lst_top[lst_sco.index(minil)] = (i,scoi)
+            except ValueError:
+                logging.debug("ValueError")
+                logging.debug("minil = "+str(minil))
+                logging.debug("lst_top = "+str(lst_top))
+        #i += 1 
+    end = perf_counter()
+    if not mute:
+        logging.debug("getMostRelevantDocsSVD - Temps pris : "+str(end-start)+"s")
+        
+    lst_top = sorted(lst_top, key = lambda x:x[-1], reverse = True)
+    
+    output = []
+    for e in lst_top:
+        scoi = e[-1]
+        
+        if len(output)>max_nbRes:
+            break
+        
+        if scoi > threshold :
+            if e[0] is not None:
+                output.append(e)
+    
+    return output
+
+###############################################
+#--------------------TESTS--------------------#
+###############################################
 
 def testW():
     A  = np.array([1, 2, 3, 9, 1, 4])
