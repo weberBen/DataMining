@@ -92,6 +92,16 @@ class Request:
             self._load(filename, k)
     
 
+    def refreshsvd(self, rk = 6):
+        if self._matrix is None or self._idf is None:
+            logging.error("matrix or idf vector not initialized")
+            exit()
+        tmpM = scs.diags(self._idf.data)*self._matrix
+        u, s, vt = scs.linalg.svds(tmpM, k = rk)
+        u, s, vt = scs.csc_matrix(u), scs.csc_matrix(s), scs.csc_matrix(vt)
+        self._svd = u, scs.diags(s.data)*vt 
+
+
     def search(self, txt, max_nbRes = 1, threshold = 0):
         
         if self._matrix is None or self._idf is None or self._table is None:
@@ -167,7 +177,6 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
         logging.debug("createTFMatrixV5 - Taille CSC : "+str(M.data.nbytes+M.row.nbytes+M.col.nbytes)+" bytes")
         logging.debug("createTFMatrixV5 - Taille Vecteur IDF : "+str(sys.getsizeof(V))+" bytes")
 
-    #lst_dwc = glob.glob(path+freqFormat)
     data = []
     row = []
     col = []
@@ -187,7 +196,7 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
         if cpt%count_item==0:
             logging.info("{0} éléments ont été parcourus depuis le début ({1})".format(cpt, datetime.datetime.now()))
             
-        cpt+=1
+        cpt += 1
         table.append(m.id)
         itt = m.iterator()
         subTotal = 0
@@ -212,16 +221,16 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
     for i in tqdm(range(m)):
         V.append(np.log((n+1)/(M.getrow(i).count_nonzero()+1)))
         
-    logging.info("creation of the vector")
+    logging.info("creation of the idf vector")
     V = scs.coo_matrix((V, (range(len(V)), [0]*len(V))), dtype = float)
     end = perf_counter()
     if not mute:
         varsizecheck(data, row, col, M, V)
-        logging.debug("createTFMatrixV4 - Temps pris : "+str(end-start)+"s")
+        logging.debug("createTFMatrixV5 - Temps pris : "+str(end-start)+"s")
     return M, V, table
 
 
-def createQueryVect(wordsbag, sentence, mute = True, response=None):
+def createQueryVect(wordsbag, sentence, mute = True, response = None):
     """
     string * bool -> CSC | None
     """
@@ -254,11 +263,16 @@ def cosNorm(Q, C):
     return Q.multiply(C).sum()/(scs.linalg.norm(Q)*scs.linalg.norm(C))
 
 
-def cosNormSVD(Q, Uk, Hkj):
+def cosNormSVD(QUk, Hkj):
     """
-    CSC * CSC * CSC -> float
+    CSC * CSC -> float
     """
-    return Uk.transpose().multiply(Q).multiply(Hkj).sum()/(scs.linalg.norm(Uk.transpose().multiply(Q))*scs.linalg.norm(Hkj))
+    # Q ligne (151206,1)
+    # Uk (6,151206)
+    # Uk.T*q.T = (qUk).T
+    resn = QUk.multiply(Hkj).sum()
+    resd = (scs.linalg.norm(QUk)*scs.linalg.norm(Hkj))
+    return resn/resd
 
 ########################################################
 #--------------------SEARCH RESULTS--------------------#
@@ -282,8 +296,9 @@ def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold = 0, mute = True):
         Q = Q[:m]
     i = 0
     #while i < n:
-    for i in tqdm(range(n),desc='recherche en cours'):
-        scoi = cosNorm(Q, M[:,i].multiply(V))
+    Q = Q.multiply(V)
+    for i in tqdm(range(n),desc = 'recherche en cours'):
+        scoi = cosNorm(Q, M[:,i])
         lst_sco = [e[-1] for e in lst_top]
         minil = min(lst_sco)
         if scoi is not None and scoi > minil:
@@ -332,8 +347,9 @@ def getMostRelevantDocsSVD(UHk, Q, max_nbRes = 1, threshold = 0, mute = True):
         Q = Q[:m]
     i = 0
     #while i < n:
-    for i in tqdm(range(n),desc='recherche en cours'):
-        scoi = cosNormSVD(Q, uk, hk[:i])
+    Q = uk.transpose().multiply(Q.tranpose())
+    for i in tqdm(range(n),desc = 'recherche en cours'):
+        scoi = cosNorm(Q, hk[:,i])
         lst_sco = [e[-1] for e in lst_top]
         minil = min(lst_sco)
         if scoi is not None and scoi > minil:
