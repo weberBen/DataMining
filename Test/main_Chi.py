@@ -6,7 +6,7 @@
 import environment as Env
 import sys, os
 from querySystem.matrixOp import *
-
+import scipy.sparse as scs
 
 info = Env.Info()
 '''
@@ -26,13 +26,29 @@ if __name__ == "__main__":
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
     #r.create(matrix, erease=True, number_movies=None, count_item=1000)
     r.load(matrix)
+    """A = r._matrix
+    I = r._idf
+    print(I.shape)
+    print(A.shape)
+    M = scs.diags(I.data)*A
+    print(M.shape)
+    print("SVD")
+    u,s,vt = scs.linalg.svds(M)
+    print(u.shape)
+    print(s.shape)
+    print(vt.shape)
+
+    hk = scs.diags(s.data)*vt
+    print(hk.shape)
+
+    exit()"""
     nbRes = int(input("Nombre de résultats : "))
     while True:
         raw = input("Recherche : ")
         if raw == "quit":
             break
         print("")
-        movie = r.search(raw, nbRes)
+        movie = r.searchSVD(raw, nbRes)
         #if movie is not []:
         #    print(movie.title)
         
