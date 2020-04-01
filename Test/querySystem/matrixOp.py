@@ -70,18 +70,19 @@ class Request:
             self._create(filename, number_movies, count_item)
     
     
-    def _load(self, filename, rk = 6):
+    def _load(self, filename, rk = 100):
         logging.info("loading matrix from <<"+str(filename)+">>")
         with open(filename, "rb" ) as file:
             tmp = pickle.load(file)
         self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
-        tmpM = scs.diags(self._idf.data)*self._matrix
+        tmp = scs.diags(self._idf.tocsc().T.A, [0]).tocsc()
+        tmpM = tmp@self._matrix
         u, s, vt = scs.linalg.svds(tmpM, k = rk)
-        u, s, vt = scs.csc_matrix(u), scs.csc_matrix(s), scs.csc_matrix(vt)
-        self._svd = u, scs.diags(s.data)*vt 
+        u, s, vt = scs.csc_matrix(u), scs.diags(s.T, 0).tocsc(), scs.csc_matrix(vt)
+        self._svd = u, s@vt 
         self._dataFilename = filename
     
-    def load(self, matrix_name, k = 6):
+    def load(self, matrix_name, k = 150):
         filename = os.path.join(self._rootDirectory, matrix_name)
         
         if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -92,7 +93,7 @@ class Request:
             self._load(filename, k)
     
 
-    def refreshsvd(self, rk = 6):
+    def refreshsvd(self, rk = 100):
         if self._matrix is None or self._idf is None:
             logging.error("matrix or idf vector not initialized")
             exit()
@@ -222,7 +223,7 @@ def createTFMatrixV5(N, Freq, count_item = 100, mute = True):
         V.append(np.log((n+1)/(M.getrow(i).count_nonzero()+1)))
         
     logging.info("creation of the idf vector")
-    V = scs.coo_matrix((V, (range(len(V)), [0]*len(V))), dtype = float)
+    V = scs.coo_matrix((V, (range(len(V)), [0]*len(V))), dtype = float).tocsc()
     end = perf_counter()
     if not mute:
         varsizecheck(data, row, col, M, V)
@@ -347,7 +348,7 @@ def getMostRelevantDocsSVD(UHk, Q, max_nbRes = 1, threshold = 0, mute = True):
         Q = Q[:m]
     i = 0
     #while i < n:
-    Q = uk.transpose().multiply(Q.tranpose())
+    Q = uk.transpose().multiply(Q.transpose())
     for i in tqdm(range(n),desc = 'recherche en cours'):
         scoi = cosNorm(Q, hk[:,i])
         lst_sco = [e[-1] for e in lst_top]
