@@ -25,7 +25,8 @@ if __name__ == "__main__":
     matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
     #r.create(matrix, erease=True, number_movies=None, count_item=1000)
-    r.load(matrix)
+    rg = int(input("Rang de la SVD : "))
+    r.load(matrix, k = rg)
     """A = r._matrix
     I = r._idf
     print(I.shape)
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     print(hk.shape)
 
     exit()"""
+    #exit()
     nbRes = int(input("Nombre de résultats : "))
     while True:
         raw = input("Recherche : ")
