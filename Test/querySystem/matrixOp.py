@@ -18,6 +18,7 @@ import uuid
 import datetime
 from tqdm import tqdm, tnrange
 from decimal import *
+from matplotlib.pyplot import *
         
 #################################################
 #--------------------CLASSES--------------------#
@@ -77,8 +78,12 @@ class Request:
         self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
         tmp = scs.diags(self._idf.tocsc().T.A, [0]).tocsc()
         tmpM = tmp@self._matrix
-        u, s, vt = scs.linalg.svds(tmpM, k = rk)
-        u, s, vt = scs.csc_matrix(u), scs.diags(np.ascontiguousarray(s[::-1].T), 0).tocsc(), scs.csc_matrix(vt)
+        u, s, vt = scs.linalg.svds(tmpM, k = rk, which = 'LM')
+        srt = np.array(list(zip(s, range(s.size))))
+        srt = srt[srt[:,0].argsort()[::-1]]
+        sig, prm = srt[:,0], np.array(srt[:,1], dtype = np.int)
+        u, vt = u[:, prm], vt[prm, :]
+        u, s, vt = scs.csc_matrix(u), scs.diags(s, 0).tocsc(), scs.csc_matrix(vt)
         self._svd = u, s, vt 
         self._dataFilename = filename
     
