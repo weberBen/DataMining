@@ -78,8 +78,8 @@ class Request:
         tmp = scs.diags(self._idf.tocsc().T.A, [0]).tocsc()
         tmpM = tmp@self._matrix
         u, s, vt = scs.linalg.svds(tmpM, k = rk)
-        u, s, vt = scs.csc_matrix(u), scs.diags(s.T, 0).tocsc(), scs.csc_matrix(vt)
-        self._svd = u, s@vt 
+        u, s, vt = scs.csc_matrix(u), scs.diags(np.ascontiguousarray(s[::-1].T), 0).tocsc(), scs.csc_matrix(vt)
+        self._svd = u, s, vt 
         self._dataFilename = filename
     
     def load(self, matrix_name, k = 150):
@@ -100,7 +100,7 @@ class Request:
         tmpM = scs.diags(self._idf.data)*self._matrix
         u, s, vt = scs.linalg.svds(tmpM, k = rk)
         u, s, vt = scs.csc_matrix(u), scs.csc_matrix(s), scs.csc_matrix(vt)
-        self._svd = u, scs.diags(s.data)*vt 
+        self._svd = u, scs.diags(s.data)@vt 
 
 
     def search(self, txt, max_nbRes = 1, threshold = 0):
@@ -329,7 +329,7 @@ def getMostRelevantDocs(M, V, Q, max_nbRes = 1, threshold = 0, mute = True):
     
     return output
 
-def getMostRelevantDocsSVD(UHk, Q, max_nbRes = 1, threshold = 0, mute = True):
+def getMostRelevantDocsSVD(svd, Q, max_nbRes = 1, threshold = 0, mute = True):
     """
     [CSC * CSC] * CSC -> list[int*float]
     """
@@ -337,7 +337,8 @@ def getMostRelevantDocsSVD(UHk, Q, max_nbRes = 1, threshold = 0, mute = True):
         logging.info("Requête rejetée")
         return [(None, 0)]
     ql = Q.shape[0]
-    uk, hk = UHk
+    uk, sk, vk = svd
+    hk = sk@vk
     m, n = uk.shape[0], hk.shape[-1]
     lst_top = [(None,0.0)]*max_nbRes
     #lst_imax = [None]*nbRes
