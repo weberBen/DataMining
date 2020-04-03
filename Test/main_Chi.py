@@ -7,6 +7,8 @@ import environment as Env
 import sys, os
 from querySystem.matrixOp import *
 import scipy.sparse as scs
+import matplotlib.pyplot as plt
+import numpy as np
 
 info = Env.Info()
 '''
@@ -24,7 +26,7 @@ if __name__ == "__main__":
     N = 10
     matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
-    #r.create(matrix, erease=True, number_movies=None, count_item=1000)
+    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
     rg = int(input("Rang de la SVD : "))
     r.load(matrix, k = rg)
     """A = r._matrix
@@ -43,7 +45,11 @@ if __name__ == "__main__":
     print(hk.shape)
 
     exit()"""
-    #exit()
+    _, s, _ = r._svd
+    print(s)
+    N = np.array(range(s.shape[0]))
+    plt.plot(N, s.data, linestyle = 'dashdot')
+    plt.show()
     nbRes = int(input("Nombre de résultats : "))
     while True:
         raw = input("Recherche : ")
