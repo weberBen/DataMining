@@ -25,31 +25,12 @@ if __name__ == "__main__":
     #N = int(input("Nombre de documents : "))
     N = 10
     matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
+    
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
-    #r.create(matrix, erease=True, number_movies=1000, count_item=1000)
+    #r.create(matrix, erease=True, number_movies=50, count_item=1000)
     rg = int(input("Rang de la SVD : "))
     r.load(matrix, k = rg)
-    """A = r._matrix
-    I = r._idf
-    print(I.shape)
-    print(A.shape)
-    M = scs.diags(I.data)*A
-    print(M.shape)
-    print("SVD")
-    u,s,vt = scs.linalg.svds(M)
-    print(u.shape)
-    print(s.shape)
-    print(vt.shape)
 
-    hk = scs.diags(s.data)*vt
-    print(hk.shape)
-
-    exit()"""
-    _, s, _ = r._svd
-    print(s)
-    N = np.array(range(s.shape[0]))
-    plt.plot(N, s.data, linestyle = 'dashdot')
-    plt.show()
     nbRes = int(input("Nombre de résultats : "))
     while True:
         raw = input("Recherche : ")
@@ -57,6 +38,11 @@ if __name__ == "__main__":
             break
         print("")
         movie = r.searchSVD(raw, nbRes)
+
+        if raw == "reloadsvd":
+            rg = int(input("Rang de la SVD : "))
+            r.renewsvd(rg)
+            print("")
         #if movie is not []:
         #    print(movie.title)
         
