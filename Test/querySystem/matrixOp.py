@@ -62,7 +62,7 @@ class Request:
         with open(filename, "wb" ) as file:
             pickle.dump([self._matrix, self._idf, self._table], file)
         
-        
+
     def create(self, matrix_name, erease=False, number_movies=None, count_item = 100):
         filename = os.path.join(self._rootDirectory, matrix_name)
         
@@ -118,7 +118,7 @@ class Request:
         return scs.csc_matrix(u), scs.diags(s, 0).tocsc(), scs.csc_matrix(vt)
 
 
-    def refreshsvd(self, k = 100):
+    def renewsvd(self, k = 100):
         if self._matrix is None or self._idf is None:
             logging.error("matrix or idf vector not initialized")
             exit()
