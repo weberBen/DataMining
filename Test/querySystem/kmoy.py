@@ -38,26 +38,52 @@ def Clusterer():
 
         Retourne aussi la partition calculée
         """
-        tmp = np.random.shuffle(np.arange(n)) # VOIR SI n INCLUS OU PAS
+        # Mélange aléatoirement le np.arange(n)
+        tmp = np.random.shuffle(np.arange(n))
+        # JSP
         if k > 0 and k == 1:
             return tmp
-        cutidx = np.sort(np.random.choice(n, k-1, replace = False)) # IDEM ICI
-        if 0 not in cutidx:
+        # Au lieu de piocher aléatoirement pour avoir k paquets, on peut simplement
+        # couper à k-1 endroits le np.arange(n) mélangé juste avant
+        cutidx = np.sort(np.random.choice(n, k-1, replace = False))
+        """
+        # Décalage sinon on ne récupère pas la tête : INUTILE EN FAIT
+        if 0 not in cutidx and k != 2:
             cutidx = cutidx - cutidx[0]
+        """
 
+        # TODO : À TESTER, NORMALEMENT OK
         sets = []
-        # TODO
         for i in range(k):
+            if i == 0:
+                sets.append(tmp[:cutidx[i]])
             if i == k-1:
-                sets.append(tmp[cutidx[i]:])
+                sets.append(tmp[cutidx[i-1]:])
             else:
-                sets.append(tmp[cutidx[i]:cutidx[i+1]])
+                sets.append(tmp[cutidx[i-1]:cutidx[i]])
         self._clusters = np.array(sets)
         return self._clusters
 
+        # exemples :
         # k = 2
-        # cutidx = 5
-        # 0, 1
+        # k-1 = 1
+        # cutidx = 5, longueur 1
+        # seul indice de cutidx : 0
+        # indices de sets : 0, 1
+        # i = 0 : sets[0] = tmp[:5]
+        # i = 1 : sets[1] = tmp[5:]
+        # OK NORMALEMENT
+
+        # k = 4
+        # k-1 = 3
+        # cutidx = 6,9,15, longueur 3
+        # indices de cutidx : 0,1,2
+        # indices de sets : 0,1,2,3
+        # i = 0 : sets[0] = tmp[:6]
+        # i = 1 : sets[1] = tmp[6:9]
+        # i = 2 : sets[2] = tmp[9:15]
+        # i = 3 : sets[3] = tmp[15:]
+
 
     def _tightness(self, cluster, centroid):
         """
@@ -66,7 +92,7 @@ def Clusterer():
         """
         tgs = 0.
         for i in cluster:
-            tgs += np.linalg.norm(self._matrix[:,i]-centroid)
+            tgs += np.linalg.norm(np.abs(self._matrix[:,i]-centroid))
         return tgs
 
     def _gencoherence(self, clusters, centroids):
@@ -99,11 +125,25 @@ def Clusterer():
 
         Retourne une nouvelle partition
         Méthode naïve bof : parcours linéaire un peu lent, en O(n*k), approx O(n2)
+        
+        Soluce 15/04 : Utiliser numpy et minimiser la distance pour chacun grâce à une matrice
         """
-        return None
+        _, n = self.matrix.shape
+        i = 0
+
+        clusters = []*centroids.size
+        while i < n:
+            tmp = centroids-self.matrix[:,i]
+            clusters[np.unravel_index(tmp.argmin(), tmp.shape)].append(i)
+            i += 1
+        self.clusters = np.array(clusters)
+        return self.clusters
 
 
     def kmeans(self, k = 2, tol = 1e-1):
+        """
+        Calcul des k clusters avec l'algorithme des k-moyennes
+        """
         _, n = self.matrix.shape
 
         clusters = self._cookiecutter(k, n)
@@ -121,6 +161,9 @@ def Clusterer():
     ### RIP PETIT ANGE PARTI TROP TOT ###
 
     def brouillon(self, k = 2, tol = 1e-1):
+        """
+        Beurk
+        """
         m, n = self.matrix.shape
         
         clusters = []*k
