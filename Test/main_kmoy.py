@@ -35,19 +35,19 @@ if __name__ == "__main__":
         A[pos] = randint(1,10)
 
     cl = Clusterer(A)
-    print(cl._matrix)
+    print("Matrice :\n", cl._matrix)
 
     cl._cookiecutter(2, n)
-    print(cl._clusters)
+    print("Init clusters :\n", cl._clusters)
 
     cl._centroids = cl._computcentroids(cl._clusters)
-    print(cl._centroids)
+    print("Init centroids :\n", cl._centroids)
 
-    print(cl._tightness(cl._clusters[0], cl._centroids[0]))
+    print("Score cluster 0 :\n", cl._tightness(cl._clusters[0], cl._centroids[0]))
 
-    print(cl._gencoherence(cl._clusters, cl._centroids))
+    print("Score général :\n", cl._gencoherence(cl._clusters, cl._centroids))
 
-    print(cl._updateclusters(cl._centroids))
+    print("Nouv. clusters :\n", cl._updateclusters(cl._centroids))
 
     cl = Clusterer(A)
-    print(cl.kmeans(2))
+    print("Full k-moyennes :\n", cl.kmeans(2))
