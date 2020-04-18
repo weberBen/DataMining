@@ -51,7 +51,7 @@ class Request:
         self._table = None
 
         self._svd = None
-        
+        self._nmf = None
 
     ### CREATION ###
 
@@ -87,12 +87,12 @@ class Request:
         self._matrix, self._idf, self._table = tmp[0], tmp[1], tmp[2]
         
         tmp = self._normalizetfidf()
-        u, s, vt = scs.linalg.svds(tmp, k = k, which = 'LM')
-        self._svd = self._normalizesvd(u, s, vt)
+        U, S, Vt = scs.linalg.svds(tmp, k = k, which = 'LM')
+        self._svd = self._normalizesvd(U, S, Vt)
         self._dataFilename = filename
     
 
-    def load(self, matrix_name, k = 150):
+    def load(self, matrix_name, k = 400):
         filename = os.path.join(self._rootDirectory, matrix_name)
         
         if not os.path.exists(filename) or not os.path.isfile(filename):
@@ -118,15 +118,35 @@ class Request:
         return scs.csc_matrix(u), scs.diags(s, 0).tocsc(), scs.csc_matrix(vt)
 
 
-    def renewsvd(self, k = 100):
+    def renewsvd(self, k = 400):
         if self._matrix is None or self._idf is None:
             logging.error("matrix or idf vector not initialized")
             exit()
 
         tmp = self._normalizetfidf()
-        u, s, vt = scs.linalg.svds(tmp, k = k, which = 'LM')
-        self._svd = self._normalizesvd(u, s, vt)
+        U, S, Vt = scs.linalg.svds(tmp, k = k, which = 'LM')
+        self._svd = self._normalizesvd(U, S, Vt)
 
+
+    ### NMF ###
+
+    def _nmf(self, k = 100, maxiter = 1000):
+        m, n = self._matrix.shape
+        W = np.random.rand(m, n)
+        H = np.zeros((m, n))
+        cpt = 0
+        while cpt < maxiter:
+            W = W/scs.linalg.norm(W)
+            Wold = W
+            for j in range(n):
+                H[:,j] = scs.linalg.lsqr(W, self._matrix[:,j])
+            for i in range(m):
+                tmp = scs.linalg.lsqr(H.T, self._matrix[i,:].T)
+                W[i,:] = tmp.T
+            if np.allclose(Wold, W):
+                break
+            cpt += 1
+        return W, H
 
     ### RECHERCHE ###
 
