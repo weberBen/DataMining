@@ -5,8 +5,6 @@
 
 ### IMPORTS ###
 
-from matrixOp import *
-
 import sys
 import os
 import numpy as np
@@ -26,41 +24,56 @@ from tqdm import tqdm, tnrange
 #--------------------CLASS--------------------#
 ###############################################
 
-def Clusterer():
+class Clusterer:
     def __init__(self, matrix):
         self._matrix = matrix
         self._clusters = None # représente les vecteurs des clusters selon leurs indices
         self._centroids = None
 
     def _cookiecutter(self, k = 2, n = 10):
+        def cutter(n):
+            return np.sort(np.random.choice(n, k-1, replace = False))
         """
         Initialise self._clusters avec une partition aléatoire des documents
 
         Retourne aussi la partition calculée
         """
         # Mélange aléatoirement le np.arange(n)
-        tmp = np.random.shuffle(np.arange(n))
+        tmp = np.arange(n)
+        np.random.shuffle(tmp)
         # JSP
         if k > 0 and k == 1:
             return tmp
         # Au lieu de piocher aléatoirement pour avoir k paquets, on peut simplement
         # couper à k-1 endroits le np.arange(n) mélangé juste avant
-        cutidx = np.sort(np.random.choice(n, k-1, replace = False))
+        cutidx = cutter(n)
         """
         # Décalage sinon on ne récupère pas la tête : INUTILE EN FAIT
         if 0 not in cutidx and k != 2:
             cutidx = cutidx - cutidx[0]
         """
 
-        # TODO : À TESTER, NORMALEMENT OK
         sets = []
-        for i in range(k):
-            if i == 0:
-                sets.append(tmp[:cutidx[i]])
-            if i == k-1:
-                sets.append(tmp[cutidx[i-1]:])
-            else:
-                sets.append(tmp[cutidx[i-1]:cutidx[i]])
+        while 1:
+            sets.clear()
+            hasempty = 0
+
+            for i in range(k-1):
+                if i == 0:
+                    sets.append(tmp[:cutidx[i]])
+                if i == k-2:
+                    sets.append(tmp[cutidx[i]:])
+                else:
+                    sets.append(tmp[cutidx[i]:cutidx[i+1]])
+
+                if sets[i].size == 0:
+                    hasempty = 1
+                    cutidx = cutter(n)
+                    break
+                
+            if hasempty == 0:
+                break
+
         self._clusters = np.array(sets)
         return self._clusters
 
@@ -100,14 +113,14 @@ def Clusterer():
         Qualité du clustering
         Ch. 9, p. 102
         """
-        if clusters.size != centroids.size:
+        if clusters.shape[0] != centroids.shape[0]:
             return None
         gtgs = 0.
         for cluster, centroid in zip(clusters, centroids):
             gtgs += self._tightness(cluster, centroid)
         return gtgs
 
-    def _computcentroids(self, partition = self._clusters):
+    def _computcentroids(self, partition = None):
         """
         Calcul des centroïdes selon la partition
 
@@ -128,33 +141,34 @@ def Clusterer():
         
         Soluce 15/04 : Utiliser numpy et minimiser la distance pour chacun grâce à une matrice
         """
-        _, n = self.matrix.shape
+        _, n = self._matrix.shape
         i = 0
 
-        clusters = []*centroids.size
+        clusters = [[] for i in range(centroids.shape[0])]
         while i < n:
-            tmp = centroids-self.matrix[:,i]
-            clusters[np.unravel_index(tmp.argmin(), tmp.shape)].append(i)
+            tmp = np.linalg.norm(centroids-self._matrix[:,i], axis = 1)
+            clusters[tmp.argmin()].append(i)
             i += 1
-        self.clusters = np.array(clusters)
-        return self.clusters
+
+        return np.array([np.array(k) for k in clusters])
 
 
     def kmeans(self, k = 2, tol = 1e-1):
         """
         Calcul des k clusters avec l'algorithme des k-moyennes
         """
-        _, n = self.matrix.shape
+        _, n = self._matrix.shape
 
         clusters = self._cookiecutter(k, n)
         while 1:
+            self.centroids = self._computcentroids(clusters)
+
+            clusters = self._updateclusters(self.centroids)
             centroids = self._computcentroids(clusters)
-            clusters = self._updateclusters(centroids)
-            # TODO : confusion new et old
-            if np.abs(self._gencoherence(clusters, centroids), self._gencoherence(self._clusters, centroids)) < tol:
+
+            if np.abs(self._gencoherence(clusters, centroids)-self._gencoherence(self._clusters, centroids)) < tol:
                 break
             self._clusters = clusters
-        self._clusters = clusters
         return clusters
 
 
