@@ -23,12 +23,15 @@ def text_box():
     processed_text = text.upper()
     tmp=recherche(processed_text,ma)
     print(tmp)
-    
+    Pokemons =["Pikachu", "Charizard", "Squirtle", "Jigglypuff",  
+           "Bulbasaur", "Gengar", "Charmander", "Mew", "Lugia", "Gyarados"] 
+  
 
-    return render_template("resultat.html" , message1 = tmp )
+    return render_template("resultat.html" , len = len(tmp), tmp = tmp )
 
 
 def recherche(input,ma):
+    L=[]
     info = Env.Info()
     env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
     database = env_obj.Database
@@ -38,16 +41,22 @@ def recherche(input,ma):
     r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
     r.load(matrix)
 
-    response = r.search(input, 1)
+    response = r.search(input, 10)
     res = response.results
     if len(res)==0:
             return("None","0")
+            
+
+    for movie_id, score in res:
+        movie = database.getMovie(movie_id)
+        L.append((movie.title,round(score,2)))
+
             
     movie_id, score  = res[0]
     movie = database.getMovie(movie_id)
     print("\ntitre du film\n"+movie.title)
 
-    return (movie.title,round(score,2))
+    return L
 
 @app.route('/about')
 def about():

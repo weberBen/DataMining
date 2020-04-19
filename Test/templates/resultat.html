@@ -14,9 +14,17 @@
         <a href="about">About</a>
       </div>
       <center>
-        <h1>projet fouille</h1>
-	    <p> Le résultat de votre recherche est :<br /> {{ message1[0] }} - {{ message1[1] }} </p>
+      <p> Le résultat de votre recherche est :<br /> </p>
+    </center>
+        <!-- For loop logic of jinja template -->
+        {%for i in range(0, len)%} 
+          <br>
+            <p>{{tmp[i][0]}} - {{tmp[i][1]}}</p> 
+        {%endfor%} 
+          
+      
     </body>
+    <center>
     <a href="{{ url_for('home') }}"> nouvelle recherche </a>
-  </center>
+    </center>
 </html>
