@@ -1,43 +1,50 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <title>projet fouille</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-  </head>
+</head>
 
 <body>
-  <div class="topnav">
-    <a class="active" href="/">Home</a>
-    <a href="about">About</a>
-  </div>
-  </header>
- 
+    <div class="topnav">
+        <a class="active" href="/">Home</a>
+        <a href="about">About</a>
+
+    </div>
+    </header>
+
     <form action="." method="POST">
 
-      
+        <div class="wrap">
+            <div>
+                <input type="radio" id="normal" name="contact" value=0 checked>
+                <label for="normal"><span></span>normal</label>
 
-      <div class="wrap">
-        <div class="search">
-            <input type="text" name="text" class="searchTerm" placeholder="entrer la description du film">
-            <button type="submit" class="searchButton" onclick="$('#loading').show();" >
-              <i class="fa fa-search"></i>
-            </button>
-            <div class="form-group">
-              <select class="form-control" id="matrice" name="matrice">
-                <option value="matrix_all" selected>petite matrice</option>
-                <option value="matrix_all_but_for_real_for_real_now">matrice totale</option>
-              </select>
+                <input type="radio" id="svd" name="contact" value=1>
+                <label for="svd"><span></span>svd</label>
             </div>
-          </form>
-           <div id="loading" style="display:none;"><img src="{{ url_for('static', filename='loading.gif') }}" alt="loading" /></div>
-          </div>
-        </div>
-      </div>
-  </body>  
-  </html>
+            <br>
+            <div class="search">
 
- 
+                <input type="text" name="text" class="searchTerm" placeholder="entrer la description du film">
+                <button type="submit" class="searchButton" onclick="$('#loading').show();">
+                    <i class="fa fa-search"></i>
+                </button>
+                <div class="form-group">
+                    <select class="form-control" id="matrice" name="matrice">
+                        <option value="matrix_all" selected>petite matrice</option>
+                        <option value="matrix_all_but_for_real_for_real_now">matrice totale</option>
+                    </select>
+                </div>
+            </div>
+    </form>
+    <div id="loading" style="display:none;"><img src="{{ url_for('static', filename='loading.gif') }}" alt="loading" /></div>
+    </div>
+</body>
+
+</html>

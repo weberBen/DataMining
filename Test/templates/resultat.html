@@ -10,16 +10,17 @@
 
     <body>
       <div class="topnav">
-        <a class="active" href="/">Home</a>
+        <a href="/">Home</a>
         <a href="about">About</a>
+        
       </div>
       <center>
-      <p> Le résultat de votre recherche est :<br /> </p>
+      <h2> Le résultat de votre recherche est :<br /> </h2>
     </center>
         <!-- For loop logic of jinja template -->
         {%for i in range(0, len)%} 
           <br>
-            <p>{{tmp[i][0]}} - {{tmp[i][1]}}</p> 
+            <h3>{{tmp[i][0]}} - {{tmp[i][1]}}</h3> 
         {%endfor%} 
           
       
