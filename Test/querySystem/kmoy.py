@@ -105,7 +105,7 @@ class Clusterer:
         """
         tgs = 0.
         for i in cluster:
-            tgs += np.linalg.norm(np.abs(self._matrix[:,i]-centroid))
+            tgs += scs.linalg.norm(np.abs(self._matrix[:,i]-centroid))
         return tgs
 
     def _gencoherence(self, clusters, centroids):
@@ -126,10 +126,12 @@ class Clusterer:
 
         Retourne une liste de vecteurs
         """
-        centroids = []
+        centroids = scs.coo_matrix(np.empty((self._matrix.shape[0],1)))
+        i = 0
         for ens in partition:
-            centroids.append(np.mean(self._matrix[:,ens], axis = 1, dtype = np.float32))
-        return np.array(centroids)
+            centroids = scs.hstack([centroids, self._matrix[:,ens].tocoo().mean(axis = 1)])
+            i += 1
+        return centroids.tocsc()[:,1:]
 
     def _updateclusters(self, centroids):
         """
@@ -143,10 +145,12 @@ class Clusterer:
         """
         _, n = self._matrix.shape
         i = 0
-
-        clusters = [[] for i in range(centroids.shape[0])]
-        while i < n:
-            tmp = np.linalg.norm(centroids-self._matrix[:,i], axis = 1)
+        nbc = centroids.shape[1]
+        #print(centroids.shape)
+        #print(self._matrix[:,0][:,np.zeros(nbc)].shape)
+        clusters = [[] for i in range(nbc)]
+        for i in tqdm(range(n), desc = 'Update clusters'):
+            tmp = scs.linalg.norm(centroids-self._matrix[:,i][:,np.zeros(nbc)], axis = 0)
             clusters[tmp.argmin()].append(i)
             i += 1
 
@@ -160,15 +164,19 @@ class Clusterer:
         _, n = self._matrix.shape
 
         clusters = self._cookiecutter(k, n)
+        i = 0
         while 1:
+            logging.debug("Itération : {}".format(i))
             self.centroids = self._computcentroids(clusters)
-
+            logging.debug("Calc. nouveau cluster")
             clusters = self._updateclusters(self.centroids)
+            logging.debug("Calc. centroids")
             centroids = self._computcentroids(clusters)
-
+            logging.debug("Comp. cohérences")
             if np.abs(self._gencoherence(clusters, centroids)-self._gencoherence(self._clusters, centroids)) < tol:
                 break
             self._clusters = clusters
+            i += 1
         return clusters
 
 
