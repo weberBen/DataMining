@@ -13,19 +13,18 @@ import scipy.sparse as scs
 import numpy as np
 from random import randint
 
-#info = Env.Info()
+info = Env.Info()
 '''
 wordsBagInfo = Env.WordsBagInfo(ignore=True) 
 info = Env.Info(wordsBagInfo=wordsBagInfo)
 '''
-'''
+
 env_obj = Env.setupEnv([__file__, sys.argv[0], os.getcwd()], info)
 database = env_obj.Database
 wordsBag = env_obj.WordsBag
 Freq = env_obj.Frequency
-'''
 
-if __name__ == "__main__":
+def test():
     m, n = 10, 5
     A = np.zeros((m, n))
 
@@ -51,3 +50,21 @@ if __name__ == "__main__":
 
     cl = Clusterer(A)
     print("Full k-moyennes :\n", cl.kmeans(2))
+
+def fulltest():
+    matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
+    
+    r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
+    #r.create(matrix, erease=True, number_movies=50, count_item=1000)
+    rg = 6
+    r.load(matrix, k = rg)
+
+    nbc = int(input("Nombre de clusters : "))
+    cl = Clusterer(r._normalizetfidf())
+    res = cl.kmeans(nbc)
+
+    print("k-moyennes pour k = {}".format(nbc), res)
+
+if __name__ == "__main__":
+    #test()
+    fulltest()
