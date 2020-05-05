@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>projet fouille</title>
+    <title>FilmFinder</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
   </head>
@@ -12,20 +13,55 @@
       <div class="topnav">
         <a href="/">Home</a>
         <a href="about">About</a>
-        
       </div>
-      <center>
-      <h2> Le résultat de votre recherche est :<br /> </h2>
-    </center>
+      <form action="." method="POST">
+        <div class="wrap">
+           <div>
+              <input type="radio" id="normal" name="mode" value=0 checked>
+              <label for="normal"><span></span>TF-IDF</label>
+              <input type="radio" id="svd" name="mode" value=1>
+              <label for="svd"><span></span>SVD</label>
+           </div>
+           <br>
+           <div class="search">
+              <input type="text" name="text" class="searchTerm" placeholder="{{search}}">
+              <button type="submit" class="searchButton" id="sub" value="Submit">
+              <i class="fa fa-search"></i>
+              </button>
+              <div class="form-group">
+                 <select class="form-control" id="matrice" name="matrice">
+                    <option value="matrix_all" selected>small matrix</option>
+                    <option value="matrix_all_but_for_real_for_real_now">total matrix</option>
+                 </select>
+              </div>
+           </div>
+           </div>
+     </form>
+
         <!-- For loop logic of jinja template -->
-        {%for i in range(0, len)%} 
+        {%for i in range(0, number_res)%}
           <br>
-            <h3>{{tmp[i][0]}} - {{tmp[i][1]}}</h3> 
-        {%endfor%} 
-          
-      
-    </body>
-    <center>
-    <a href="{{ url_for('home') }}"> nouvelle recherche </a>
-    </center>
+            <h3><a href="https://en.wikipedia.org/?curid={{tmp[i][3]}}">{{tmp[i][0]}} - {{tmp[i][1]}}</a></h3>
+            {%if tmp[i][2]| length>800%}
+              <p> {{tmp[i][2][:800]}}...</p>
+              {%else%}
+              <p> {{tmp[i][2]}}</p>
+              {%endif%}
+            
+        {%endfor%}
+        
+        <div class="loader-wrapper">
+          <span class="loader"><span class="loader-inner"></span></span>
+       </div>
+        <script>
+          $(window).on("load",function(){
+            $(".loader-wrapper").fadeOut("slow");
+          });
+       </script>
+       <script>
+          $('#sub').click(function () {
+              $(".loader-wrapper").fadeIn("slow");
+          });
+       </script>
+  </body>
 </html>

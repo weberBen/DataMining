@@ -152,7 +152,7 @@ class App:
     
     def _initGui(self):
         self._root.geometry("950x700") 
-        self._root.title("Télémagouilleur")
+        self._root.title("FilmFinder")
         self._root.grid_rowconfigure(1, weight=1)
         self._root.grid_columnconfigure(0, weight=1)
         

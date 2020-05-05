@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>FilmFinder</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  </head>
+
+    <body>
+      <div class="topnav">
+        <a href="/">Home</a>
+        <a href="about">About</a>
+      </div>  
+      <center> 
+            <h3><a href="https://en.wikipedia.org/?curid={{movie[1]}}">{{movie[0]}}, id:{{movie[1]}}</a></h3>
+            <h3>{{movie[0]}}, id:{{movie[1]}} </h3>
+      </center>
+      <br>
+      <div class="wiki">
+        {{movie[2]}}
+      </div>
+        <div class="loader-wrapper">
+          <span class="loader"><span class="loader-inner"></span></span>
+       </div>
+        <script>
+          $(window).on("load",function(){
+            $(".loader-wrapper").fadeOut("slow");
+          });
+       </script>
+       <script>
+          $('#sub').click(function () {
+              $(".loader-wrapper").fadeIn("slow");
+          });
+       </script>
+  </body>
+</html>

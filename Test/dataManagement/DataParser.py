@@ -45,7 +45,7 @@ class MovieHandler:
         self._tableName = "Movie"
         
         self._dbFilename = filename
-        self._conn = sqlite3.connect(filename)
+        self._conn = sqlite3.connect(filename, check_same_thread=False)
         
         if not self._tableExists(self._conn, self._tableName):
             self._createDb(self._conn)

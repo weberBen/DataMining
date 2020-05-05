@@ -77,16 +77,24 @@ wordsBag = env_obj.WordsBag
 Freq = env_obj.Frequency
 
 
-debut = time.time()
+
+
 
 matrix = "matrix_"+"all"+"_but_for_real"+"_for_real_now"
 r = Request(database, wordsBag, Freq, env_obj.getMatrixFolder())
+
+
+
+
 msg="number of movies to test (max : "+str(len(List_movie))+"): "
 nbr=int(input(msg))
-for rang in range(80,1000,10):
+for rang in range(2000,2001,100):
     L=[]
     nnnnn=0
-    r.load(matrix, k=rang)
+    debut=time.time()
+    r.load(matrix,k=rang)
+    fin=time.time()
+    print("\n",rang," ",fin-debut,"\n")
 
     for k in range(nbr) :
         
